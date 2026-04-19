@@ -51,7 +51,6 @@ export const ListAuthUsersResponseItem = zod.object({
   username: zod.string(),
   fullName: zod.string(),
   role: zod.string(),
-  password: zod.string(),
 });
 export const ListAuthUsersResponse = zod.array(ListAuthUsersResponseItem);
 

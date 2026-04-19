@@ -38,7 +38,6 @@ export interface AuthUserOption {
   username: string;
   fullName: string;
   role: string;
-  password: string;
 }
 
 export interface CreateStaffBody {

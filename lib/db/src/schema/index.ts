@@ -28,7 +28,7 @@ export const patientsTable = pgTable("patients", {
   mrn: text("mrn").notNull().unique(),
   fullName: text("full_name").notNull(),
   gender: text("gender").notNull(),
-  dob: date("dob"),
+  dob: date("dob", { mode: "date" }),
   phone: text("phone"),
   address: text("address"),
   bloodType: text("blood_type"),
@@ -138,7 +138,7 @@ export const medicationsTable = pgTable("medications", {
   stock: integer("stock").notNull().default(0),
   reorderLevel: integer("reorder_level").notNull().default(10),
   price: real("price").notNull().default(0),
-  expiresOn: date("expires_on"),
+  expiresOn: date("expires_on", { mode: "date" }),
   manufacturer: text("manufacturer"),
 });
 
@@ -169,7 +169,7 @@ export const prescriptionsTable = pgTable("prescriptions", {
 export const shiftsTable = pgTable("shifts", {
   id: serial("id").primaryKey(),
   staffId: integer("staff_id").notNull(),
-  shiftDate: date("shift_date").notNull(),
+  shiftDate: date("shift_date", { mode: "date" }).notNull(),
   shiftType: text("shift_type").notNull(),
   notes: text("notes"),
 });
@@ -178,8 +178,8 @@ export const leavesTable = pgTable("leaves", {
   id: serial("id").primaryKey(),
   staffId: integer("staff_id").notNull(),
   leaveType: text("leave_type").notNull(),
-  fromDate: date("from_date").notNull(),
-  toDate: date("to_date").notNull(),
+  fromDate: date("from_date", { mode: "date" }).notNull(),
+  toDate: date("to_date", { mode: "date" }).notNull(),
   reason: text("reason"),
   status: text("status").notNull().default("pending"),
 });

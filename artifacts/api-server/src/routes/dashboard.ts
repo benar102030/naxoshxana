@@ -122,7 +122,7 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
       .where(
         and(
           sql`${medicationsTable.expiresOn} is not null`,
-          lte(medicationsTable.expiresOn, in30.toISOString().slice(0, 10)),
+          lte(medicationsTable.expiresOn, in30),
         ),
       ),
     db.select({ totalStaff: sql<number>`count(*)::int` }).from(staffTable),

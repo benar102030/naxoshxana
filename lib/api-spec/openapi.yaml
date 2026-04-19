@@ -833,8 +833,7 @@ components:
         username: { type: string }
         fullName: { type: string }
         role: { type: string }
-        password: { type: string }
-      required: [username, fullName, role, password]
+      required: [username, fullName, role]
 
     Staff:
       type: object

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import type { RequestHandler } from "express";
+import "express";
 
 export type Role =
   | "admin"
@@ -35,15 +36,17 @@ export function signToken(payload: JwtPayload): string {
 
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, SECRET) as JwtPayload;
+    return jwt.verify(token, SECRET) as unknown as JwtPayload;
   } catch {
     return null;
   }
 }
 
-declare module "express-serve-static-core" {
-  interface Request {
-    user?: JwtPayload;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
   }
 }
 

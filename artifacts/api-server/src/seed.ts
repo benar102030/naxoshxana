@@ -87,7 +87,7 @@ async function main() {
         mrn: `MRN-${String(10001 + i).padStart(8, "0")}`,
         fullName: n,
         gender: i % 2 === 0 ? "male" : "female",
-        dob: `19${60 + (i % 40)}-0${1 + (i % 9)}-1${i % 9}`,
+        dob: new Date(`19${60 + (i % 40)}-0${1 + (i % 9)}-1${i % 9}`),
         phone: `0770-${String(1000000 + i).slice(-7)}`,
         address: ["هەولێر", "سلێمانی", "دهۆک", "کەرکوک"][i % 4],
         bloodType: ["A+", "B+", "O+", "AB+", "A-", "O-"][i % 6],
@@ -203,16 +203,16 @@ async function main() {
   const meds = await db
     .insert(medicationsTable)
     .values([
-      { name: "پاراسیتامۆڵ ٥٠٠mg", category: "ئێشکوژ", unit: "tablet", stock: 500, reorderLevel: 100, price: 0.25, expiresOn: "2026-12-31", manufacturer: "GSK" },
-      { name: "ئامۆکسیسیلین ٥٠٠mg", category: "دژەباکتریا", unit: "tablet", stock: 250, reorderLevel: 50, price: 0.5, expiresOn: "2026-08-31", manufacturer: "Pfizer" },
-      { name: "ئایبۆپڕۆفین ٤٠٠mg", category: "ئێشکوژ", unit: "tablet", stock: 180, reorderLevel: 100, price: 0.3, expiresOn: "2026-11-30", manufacturer: "Bayer" },
-      { name: "سیپڕۆفلۆکساسین ٥٠٠mg", category: "دژەباکتریا", unit: "tablet", stock: 8, reorderLevel: 30, price: 0.75, expiresOn: "2026-06-15", manufacturer: "Cipla" },
-      { name: "میتفۆرمین ٨٥٠mg", category: "دژەشەکرە", unit: "tablet", stock: 320, reorderLevel: 60, price: 0.4, expiresOn: "2027-01-15", manufacturer: "Sanofi" },
-      { name: "ئۆمێپڕازۆڵ ٢٠mg", category: "گەدە", unit: "tablet", stock: 220, reorderLevel: 50, price: 0.35, expiresOn: "2026-09-30", manufacturer: "Astra" },
-      { name: "ڤیتامین D3 ١٠٠٠IU", category: "ڤیتامین", unit: "tablet", stock: 400, reorderLevel: 80, price: 0.2, expiresOn: "2027-03-31", manufacturer: "Nature" },
-      { name: "ئنسولین تیپ بە تایبەت", category: "ھۆرمۆن", unit: "vial", stock: 12, reorderLevel: 15, price: 8, expiresOn: "2026-04-30", manufacturer: "Novo" },
-      { name: "ئاسپرین ١٠٠mg", category: "خوێنڕەش", unit: "tablet", stock: 600, reorderLevel: 100, price: 0.15, expiresOn: "2027-07-31", manufacturer: "Bayer" },
-      { name: "شەربەتی کۆکە", category: "کۆکە", unit: "bottle", stock: 45, reorderLevel: 20, price: 3, expiresOn: "2026-05-31", manufacturer: "GSK" },
+      { name: "پاراسیتامۆڵ ٥٠٠mg", category: "ئێشکوژ", unit: "tablet", stock: 500, reorderLevel: 100, price: 0.25, expiresOn: new Date("2026-12-31"), manufacturer: "GSK" },
+      { name: "ئامۆکسیسیلین ٥٠٠mg", category: "دژەباکتریا", unit: "tablet", stock: 250, reorderLevel: 50, price: 0.5, expiresOn: new Date("2026-08-31"), manufacturer: "Pfizer" },
+      { name: "ئایبۆپڕۆفین ٤٠٠mg", category: "ئێشکوژ", unit: "tablet", stock: 180, reorderLevel: 100, price: 0.3, expiresOn: new Date("2026-11-30"), manufacturer: "Bayer" },
+      { name: "سیپڕۆفلۆکساسین ٥٠٠mg", category: "دژەباکتریا", unit: "tablet", stock: 8, reorderLevel: 30, price: 0.75, expiresOn: new Date("2026-06-15"), manufacturer: "Cipla" },
+      { name: "میتفۆرمین ٨٥٠mg", category: "دژەشەکرە", unit: "tablet", stock: 320, reorderLevel: 60, price: 0.4, expiresOn: new Date("2027-01-15"), manufacturer: "Sanofi" },
+      { name: "ئۆمێپڕازۆڵ ٢٠mg", category: "گەدە", unit: "tablet", stock: 220, reorderLevel: 50, price: 0.35, expiresOn: new Date("2026-09-30"), manufacturer: "Astra" },
+      { name: "ڤیتامین D3 ١٠٠٠IU", category: "ڤیتامین", unit: "tablet", stock: 400, reorderLevel: 80, price: 0.2, expiresOn: new Date("2027-03-31"), manufacturer: "Nature" },
+      { name: "ئنسولین تیپ بە تایبەت", category: "ھۆرمۆن", unit: "vial", stock: 12, reorderLevel: 15, price: 8, expiresOn: new Date("2026-04-30"), manufacturer: "Novo" },
+      { name: "ئاسپرین ١٠٠mg", category: "خوێنڕەش", unit: "tablet", stock: 600, reorderLevel: 100, price: 0.15, expiresOn: new Date("2027-07-31"), manufacturer: "Bayer" },
+      { name: "شەربەتی کۆکە", category: "کۆکە", unit: "bottle", stock: 45, reorderLevel: 20, price: 3, expiresOn: new Date("2026-05-31"), manufacturer: "GSK" },
     ])
     .returning();
 
@@ -240,7 +240,7 @@ async function main() {
     for (let i = 0; i < 4; i++) {
       shiftValues.push({
         staffId: staff[(d + i) % staff.length].id,
-        shiftDate: dateStr,
+        shiftDate: new Date(dateStr),
         shiftType: ["morning", "evening", "night"][i % 3],
       });
     }
@@ -249,9 +249,9 @@ async function main() {
 
   // LEAVES
   await db.insert(leavesTable).values([
-    { staffId: staff[5].id, leaveType: "annual", fromDate: "2026-04-22", toDate: "2026-04-29", reason: "گەشت", status: "approved" },
-    { staffId: staff[6].id, leaveType: "sick", fromDate: "2026-04-18", toDate: "2026-04-20", reason: "نەخۆشی", status: "approved" },
-    { staffId: staff[8].id, leaveType: "emergency", fromDate: "2026-04-25", toDate: "2026-04-26", reason: "خانەوادە", status: "pending" },
+    { staffId: staff[5].id, leaveType: "annual", fromDate: new Date("2026-04-22"), toDate: new Date("2026-04-29"), reason: "گەشت", status: "approved" },
+    { staffId: staff[6].id, leaveType: "sick", fromDate: new Date("2026-04-18"), toDate: new Date("2026-04-20"), reason: "نەخۆشی", status: "approved" },
+    { staffId: staff[8].id, leaveType: "emergency", fromDate: new Date("2026-04-25"), toDate: new Date("2026-04-26"), reason: "خانەوادە", status: "pending" },
   ]);
 
   // PAYROLL
