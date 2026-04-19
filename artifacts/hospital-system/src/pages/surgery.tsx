@@ -14,8 +14,14 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * لاپەڕەی بەڕێوەبردنی نەشتەرگەرییەکان
+ * لێرەدا خشتەی نەشتەرگەری، پزیشکە نەشتەرگەرەکان، و ژوورەکانی نەشتەرگەری بەڕێوەدەبرێن
+ */
 export default function Surgery() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // پەنجەرەی خشتەکردنی نەشتەرگەری نوێ
+  
+  // بارکردنی دراوەکان
   const { data: surgeries, isLoading } = useListSurgeries();
   const { data: patients } = useListPatients();
   const { data: staff } = useListStaff();
@@ -25,8 +31,13 @@ export default function Surgery() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // فلتەرکردنی پزیشکەکان بۆ هەڵبژاردنی نەشتەرگەر
   const surgeons = staff?.filter(s => s.role === 'doctor') || [];
 
+  /**
+   * تۆمارکردنی کاتێکی نوێی نەشتەرگەری
+   * لێرەدا ژووری نەشتەرگەری (OR) و جۆری سڕکردن (Anesthesia) دیاری دەکرێن
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -49,6 +60,7 @@ export default function Surgery() {
     }
   };
 
+  // گۆڕینی دۆخی نەشتەرگەری (وەک: 'تەواوبوو' دوای ئەنجامدانی نۆرەکە)
   const handleStatusChange = async (id: number, status: string) => {
     try {
       await updateSurgery.mutateAsync({ id, data: { status } });
@@ -116,6 +128,7 @@ export default function Surgery() {
         }
       />
 
+      {/* خشتەی گشتی نەشتەرگەرییەکان */}
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
@@ -144,6 +157,7 @@ export default function Surgery() {
                   <TableCell dir="ltr" className="text-right text-sm text-muted-foreground">{formatDateTime(surgery.scheduledAt)}</TableCell>
                   <TableCell><StatusBadge status={surgery.status} /></TableCell>
                   <TableCell className="text-left">
+                    {/* گۆڕینی قۆناغەکانی پێش و پاش نەشتەرگەری */}
                     <Select value={surgery.status} onValueChange={(val) => handleStatusChange(surgery.id, val)}>
                       <SelectTrigger className="w-[130px] h-8">
                         <SelectValue placeholder="گۆڕینی دۆخ" />

@@ -14,18 +14,27 @@ import { useToast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+/**
+ * لاپەڕەی کلینیکی دەرەکی (OPD)
+ * ئەم بەشە تایبەتە بە بەڕێوەبردنی کاتەکانی نۆرینگە و بینینی نەخۆش لەلایەن پزیشکە پسپۆڕەکانەوە
+ */
 export default function OPD() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // پەنجەرەی زیادکردنی سەردان
+  
+  // بارکردنی زانیارییەکان
   const { data: visits, isLoading } = useListOpdVisits();
   const { data: patients } = useListPatients();
   const { data: staff } = useListStaff();
+  
   const createVisit = useCreateOpdVisit();
   const updateVisit = useUpdateOpdVisit();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // جیاکردنەوەی کارمەندەکان بۆ وەرگرتنی لیستی پزیشکەکان
   const doctors = staff?.filter(s => s.role === 'doctor') || [];
 
+  // تۆمارکردنی کاتی سەردانێکی نوێ بۆ نەخۆش
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -39,6 +48,7 @@ export default function OPD() {
           complaint: formData.get("complaint") as string || undefined,
         }
       });
+      // نوێکردنەوەی لیستەکە دوای سەرکەوتنی کارەکە
       queryClient.invalidateQueries({ queryKey: getListOpdVisitsQueryKey() });
       setIsOpen(false);
       toast({ title: "سەرکەوتوو بوو", description: "سەردانی نوێ زیادکرا" });
@@ -47,6 +57,7 @@ export default function OPD() {
     }
   };
 
+  // گۆڕینی دۆخی سەردان (بۆ نموونە: گۆڕین بۆ 'تەواوبوو' کاتێک پزیشک نەخۆشەکە دەبینێت)
   const handleStatusChange = async (id: number, status: string) => {
     try {
       await updateVisit.mutateAsync({ id, data: { status } });
@@ -108,6 +119,7 @@ export default function OPD() {
         }
       />
 
+      {/* خشتەی نۆرینگەکان */}
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
@@ -136,6 +148,7 @@ export default function OPD() {
                   <TableCell>{formatCurrency(visit.fee)}</TableCell>
                   <TableCell><StatusBadge status={visit.status} /></TableCell>
                   <TableCell className="text-left">
+                    {/* گۆڕینی دۆخی پشکنین دوای بینینی پزیشک */}
                     <Select value={visit.status} onValueChange={(val) => handleStatusChange(visit.id, val)}>
                       <SelectTrigger className="w-[130px] h-8">
                         <SelectValue placeholder="گۆڕینی دۆخ" />

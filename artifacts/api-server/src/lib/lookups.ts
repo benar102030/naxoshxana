@@ -1,6 +1,10 @@
 import { db, patientsTable, staffTable, bedsTable } from "@workspace/db";
 import { inArray } from "drizzle-orm";
 
+/**
+ * گۆڕینی لیستی ناسنامەکانی نەخۆش (IDs) بۆ ناوەکان
+ * بەکاردێت بۆ نیشاندانی ناوی نەخۆش لەو خشتانەی کە تەنها ناسنامەیان تێدایە
+ */
 export async function getPatientNameMap(
   ids: number[],
 ): Promise<Map<number, string>> {
@@ -15,6 +19,9 @@ export async function getPatientNameMap(
   return map;
 }
 
+/**
+ * گۆڕینی لیستی ناسنامەکانی ستاف بۆ ناوەکان
+ */
 export async function getStaffNameMap(
   ids: number[],
 ): Promise<Map<number, string>> {
@@ -29,6 +36,9 @@ export async function getStaffNameMap(
   return map;
 }
 
+/**
+ * دروستکردنی ناونیشانی جێگاکان (Ward / Room / Bed) لەسەر بنەمای ناسنامە
+ */
 export async function getBedLabelMap(
   ids: number[],
 ): Promise<Map<number, string>> {

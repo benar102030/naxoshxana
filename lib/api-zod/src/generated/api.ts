@@ -176,6 +176,160 @@ export const UpdatePatientResponse = zod.object({
   createdAt: zod.coerce.date(),
 });
 
+/**
+ * @summary Get patient medical timeline
+ */
+export const GetPatientTimelineParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPatientTimelineResponseItem = zod.object({
+  id: zod.number(),
+  type: zod.enum(["opd", "ipd", "lab", "radiology", "prescription", "billing"]),
+  date: zod.coerce.date(),
+  title: zod.string(),
+  detail: zod.string(),
+  status: zod.string(),
+});
+export const GetPatientTimelineResponse = zod.array(
+  GetPatientTimelineResponseItem,
+);
+
+export const ListInventoryItemsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  category: zod.string(),
+  quantity: zod.number(),
+  unit: zod.string(),
+  reorderLevel: zod.number(),
+  unitPrice: zod.number(),
+  supplier: zod.string().nullish(),
+});
+export const ListInventoryItemsResponse = zod.array(
+  ListInventoryItemsResponseItem,
+);
+
+export const CreateInventoryItemBody = zod.object({
+  name: zod.string(),
+  category: zod.string(),
+  quantity: zod.number(),
+  unit: zod.string(),
+  reorderLevel: zod.number(),
+  unitPrice: zod.number(),
+  supplier: zod.string().nullish(),
+});
+
+export const UpdateInventoryItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateInventoryItemBody = zod.object({
+  quantity: zod.number().optional(),
+  reorderLevel: zod.number().optional(),
+  unitPrice: zod.number().optional(),
+  supplier: zod.string().nullish(),
+});
+
+export const UpdateInventoryItemResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  category: zod.string(),
+  quantity: zod.number(),
+  unit: zod.string(),
+  reorderLevel: zod.number(),
+  unitPrice: zod.number(),
+  supplier: zod.string().nullish(),
+});
+
+/**
+ * @summary Get inventory transactions
+ */
+export const ListInventoryTransactionsQueryParams = zod.object({
+  itemId: zod.coerce.number().optional(),
+});
+
+export const ListInventoryTransactionsResponseItem = zod.object({
+  id: zod.number(),
+  itemId: zod.number(),
+  change: zod.number(),
+  type: zod.enum(["in", "out", "adjustment"]),
+  reason: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListInventoryTransactionsResponse = zod.array(
+  ListInventoryTransactionsResponseItem,
+);
+
+export const ListMedicationsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  category: zod.string().nullish(),
+  unit: zod.string().describe("tablet|bottle|tube|vial|sachet"),
+  stock: zod.number(),
+  reorderLevel: zod.number(),
+  price: zod.number(),
+  expiresOn: zod.coerce.date().nullish(),
+  manufacturer: zod.string().nullish(),
+});
+export const ListMedicationsResponse = zod.array(ListMedicationsResponseItem);
+
+export const CreateMedicationBody = zod.object({
+  name: zod.string(),
+  category: zod.string().nullish(),
+  unit: zod.string(),
+  stock: zod.number(),
+  reorderLevel: zod.number(),
+  price: zod.number(),
+  expiresOn: zod.coerce.date().nullish(),
+  manufacturer: zod.string().nullish(),
+});
+
+export const UpdateMedicationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateMedicationBody = zod.object({
+  stock: zod.number().optional(),
+  reorderLevel: zod.number().optional(),
+  price: zod.number().optional(),
+  expiresOn: zod.coerce.date().nullish(),
+  manufacturer: zod.string().nullish(),
+});
+
+export const UpdateMedicationResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  category: zod.string().nullish(),
+  unit: zod.string().describe("tablet|bottle|tube|vial|sachet"),
+  stock: zod.number(),
+  reorderLevel: zod.number(),
+  price: zod.number(),
+  expiresOn: zod.coerce.date().nullish(),
+  manufacturer: zod.string().nullish(),
+});
+
+export const ListPharmacySalesResponseItem = zod.object({
+  id: zod.number(),
+  patientName: zod.string(),
+  patientId: zod.number().nullish(),
+  medicationId: zod.number(),
+  medicationName: zod.string(),
+  quantity: zod.number(),
+  unitPrice: zod.number(),
+  total: zod.number(),
+  soldAt: zod.coerce.date(),
+});
+export const ListPharmacySalesResponse = zod.array(
+  ListPharmacySalesResponseItem,
+);
+
+export const CreatePharmacySaleBody = zod.object({
+  patientName: zod.string(),
+  patientId: zod.number().nullish(),
+  medicationId: zod.number(),
+  quantity: zod.number(),
+});
+
 export const ListStaffResponseItem = zod.object({
   id: zod.number(),
   fullName: zod.string(),
@@ -328,6 +482,12 @@ export const ListBedsResponseItem = zod.object({
   occupied: zod.boolean(),
 });
 export const ListBedsResponse = zod.array(ListBedsResponseItem);
+
+export const CreateBedBody = zod.object({
+  room: zod.string(),
+  bedNumber: zod.string(),
+  ward: zod.string(),
+});
 
 export const ListEmergencyVisitsResponseItem = zod.object({
   id: zod.number(),
@@ -525,76 +685,6 @@ export const UpdateRadiologyOrderResponse = zod.object({
   price: zod.number(),
 });
 
-export const ListMedicationsResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  category: zod.string().nullish(),
-  unit: zod.string().describe("tablet|bottle|tube|vial|sachet"),
-  stock: zod.number(),
-  reorderLevel: zod.number(),
-  price: zod.number(),
-  expiresOn: zod.coerce.date().nullish(),
-  manufacturer: zod.string().nullish(),
-});
-export const ListMedicationsResponse = zod.array(ListMedicationsResponseItem);
-
-export const CreateMedicationBody = zod.object({
-  name: zod.string(),
-  category: zod.string().nullish(),
-  unit: zod.string(),
-  stock: zod.number(),
-  reorderLevel: zod.number(),
-  price: zod.number(),
-  expiresOn: zod.coerce.date().nullish(),
-  manufacturer: zod.string().nullish(),
-});
-
-export const UpdateMedicationParams = zod.object({
-  id: zod.coerce.number(),
-});
-
-export const UpdateMedicationBody = zod.object({
-  stock: zod.number().optional(),
-  reorderLevel: zod.number().optional(),
-  price: zod.number().optional(),
-  expiresOn: zod.coerce.date().nullish(),
-  manufacturer: zod.string().nullish(),
-});
-
-export const UpdateMedicationResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  category: zod.string().nullish(),
-  unit: zod.string().describe("tablet|bottle|tube|vial|sachet"),
-  stock: zod.number(),
-  reorderLevel: zod.number(),
-  price: zod.number(),
-  expiresOn: zod.coerce.date().nullish(),
-  manufacturer: zod.string().nullish(),
-});
-
-export const ListPharmacySalesResponseItem = zod.object({
-  id: zod.number(),
-  patientName: zod.string(),
-  patientId: zod.number().nullish(),
-  medicationId: zod.number(),
-  medicationName: zod.string(),
-  quantity: zod.number(),
-  unitPrice: zod.number(),
-  total: zod.number(),
-  soldAt: zod.coerce.date(),
-});
-export const ListPharmacySalesResponse = zod.array(
-  ListPharmacySalesResponseItem,
-);
-
-export const CreatePharmacySaleBody = zod.object({
-  patientName: zod.string(),
-  patientId: zod.number().nullish(),
-  medicationId: zod.number(),
-  quantity: zod.number(),
-});
-
 export const ListPrescriptionsResponseItem = zod.object({
   id: zod.number(),
   patientId: zod.number(),
@@ -717,50 +807,4 @@ export const PayInvoiceResponse = zod.object({
   status: zod.string().describe("unpaid|partial|paid"),
   paymentMethod: zod.string().nullish().describe("cash|card|insurance"),
   createdAt: zod.coerce.date(),
-});
-
-export const ListInventoryItemsResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  category: zod.string(),
-  quantity: zod.number(),
-  unit: zod.string(),
-  reorderLevel: zod.number(),
-  unitPrice: zod.number(),
-  supplier: zod.string().nullish(),
-});
-export const ListInventoryItemsResponse = zod.array(
-  ListInventoryItemsResponseItem,
-);
-
-export const CreateInventoryItemBody = zod.object({
-  name: zod.string(),
-  category: zod.string(),
-  quantity: zod.number(),
-  unit: zod.string(),
-  reorderLevel: zod.number(),
-  unitPrice: zod.number(),
-  supplier: zod.string().nullish(),
-});
-
-export const UpdateInventoryItemParams = zod.object({
-  id: zod.coerce.number(),
-});
-
-export const UpdateInventoryItemBody = zod.object({
-  quantity: zod.number().optional(),
-  reorderLevel: zod.number().optional(),
-  unitPrice: zod.number().optional(),
-  supplier: zod.string().nullish(),
-});
-
-export const UpdateInventoryItemResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  category: zod.string(),
-  quantity: zod.number(),
-  unit: zod.string(),
-  reorderLevel: zod.number(),
-  unitPrice: zod.number(),
-  supplier: zod.string().nullish(),
 });

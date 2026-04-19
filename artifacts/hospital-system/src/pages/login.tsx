@@ -5,17 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * لاپەڕەی چوونەژوورەوە (Login Page)
+ * ئەم بەشە ڕێگە دەدات بە بەکارهێنەران کە هەژمارەکەیان هەڵبژێرن و بچنە ناو سیستەمەکەوە
+ */
 export default function Login() {
+  // بارکردنی لیستی بەکارهێنەرانی سیستەم بۆ مەبەستی تاقیکردنەوە (Demo)
   const { data: users, isLoading } = useListAuthUsers();
   const loginMutation = useLogin();
   const setAuth = useAuthStore((state) => state.setAuth);
   const { toast } = useToast();
 
+  /**
+   * ئەنجامدانی پرۆسەی چوونەژوورەوە
+   * تێبینی: لەم وەشانەدا تێپەڕەوشەی هەمووان وەک یەکە (demo) بۆ ئاسانکاری
+   */
   const handleLogin = async (username: string) => {
     try {
       const result = await loginMutation.mutateAsync({
         data: { username, password: "demo" },
       });
+      // پاشەکەوتکردنی تۆکن و زانیاری بەکارهێنەر لە ستۆری گشتی
       setAuth(result.token, result.user);
       toast({
         title: "بەخێربێیت",
@@ -34,6 +44,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md shadow-lg border-primary/10">
         <CardHeader className="text-center space-y-2">
+          {/* لۆگۆی سیستەم */}
           <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -59,6 +70,7 @@ export default function Login() {
             </div>
           ) : (
             <div className="space-y-3">
+              {/* لیستی دوگمەکان بۆ هەر بەکارهێنەرێک */}
               {users?.map((user) => (
                 <Button
                   key={user.username}
@@ -72,6 +84,7 @@ export default function Login() {
                     <div className="flex gap-2 text-xs text-muted-foreground">
                       <span>{user.username}</span>
                       <span>•</span>
+                      {/* وەرگێڕانی ڕۆڵەکان بۆ زمانی کوردی */}
                       <span>{({admin:"بەڕێوەبەری گشتی",manager:"بەڕێوەبەر",doctor:"پزیشک",nurse:"پەرستار",pharmacist:"دەرمانفرۆش",cashier:"سندوقدار",labtech:"تەکنیسیەنی تاقیگە",radtech:"تەکنیسیەنی تیشک"} as Record<string,string>)[user.role] ?? user.role}</span>
                     </div>
                   </div>

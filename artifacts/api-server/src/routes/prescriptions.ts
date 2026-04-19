@@ -6,6 +6,9 @@ import { getPatientNameMap, getStaffNameMap } from "../lib/lookups";
 
 const router: IRouter = Router();
 
+/**
+ * زیادکردنی زانیاری نەخۆش و پزیشک بۆ لیستی ڕەچەتەکان
+ */
 async function expand(rows: (typeof prescriptionsTable.$inferSelect)[]) {
   const patientMap = await getPatientNameMap(rows.map((r) => r.patientId));
   const staffMap = await getStaffNameMap(rows.map((r) => r.doctorId));
@@ -15,14 +18,15 @@ async function expand(rows: (typeof prescriptionsTable.$inferSelect)[]) {
     patientName: patientMap.get(r.patientId) ?? "—",
     doctorId: r.doctorId,
     doctorName: staffMap.get(r.doctorId) ?? "—",
-    medicationName: r.medicationName,
-    dosage: r.dosage,
-    duration: r.duration,
-    notes: r.notes,
+    medicationName: r.medicationName, // ناوی دەرمان
+    dosage: r.dosage, // ژەمە دەرمان (بۆ نموونە: ٥٠٠ ملگم)
+    duration: r.duration, // ماوەی بەکارهێنان (بۆ نموونە: ٧ ڕۆژ)
+    notes: r.notes, // ڕێنمایی زیادە بۆ بەکارهێنان
     prescribedAt: r.prescribedAt.toISOString(),
   }));
 }
 
+// وەرگرتنی لیستی گشتی هەموو ڕەچەتە پزیشکییەکان
 router.get("/prescriptions", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
@@ -31,6 +35,7 @@ router.get("/prescriptions", async (_req, res): Promise<void> => {
   res.json(await expand(rows));
 });
 
+// تۆمارکردنی ڕەچەتەیەکی نوێ بۆ نەخۆش لەلایەن پزیشکەوە
 router.post("/prescriptions", async (req, res): Promise<void> => {
   const parsed = CreatePrescriptionBody.safeParse(req.body);
   if (!parsed.success) {

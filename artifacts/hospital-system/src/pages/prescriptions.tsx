@@ -9,12 +9,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Printer } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { PrescriptionPrint } from "@/components/PrescriptionPrint";
 
+/**
+ * لاپەڕەی نوسخەی پزیشکی (Prescriptions)
+ * لێرەدا پزیشکەکان دەتوانن دەرمان بۆ نەخۆش بنوسن و مێژووی دەرمانەکان ببینن
+ */
 export default function Prescriptions() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // پەنجەرەی نوسینی دەرمانی نوێ
+  
+  // بارکردنی دراوەکان
   const { data: prescriptions, isLoading } = useListPrescriptions();
   const { data: patients } = useListPatients();
   const { data: staff } = useListStaff();
@@ -25,6 +32,10 @@ export default function Prescriptions() {
 
   const doctors = staff?.filter(s => s.role === 'doctor') || [];
 
+  /**
+   * تۆمارکردنی نوسخەیەکی نوێ
+   * لێرەدا ناوی دەرمان و دۆز (Dosage) و ماوەی بەکارهێنان دیاری دەکرێت
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -104,6 +115,7 @@ export default function Prescriptions() {
         }
       />
 
+      {/* لیستی نوسخەکان بە شێوازی کارت (Card View) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
           <div className="col-span-full py-8 text-center text-muted-foreground">چاوەڕێ بکە...</div>
@@ -119,11 +131,19 @@ export default function Prescriptions() {
                   <h3 className="font-bold text-lg">{presc.patientName}</h3>
                   <p className="text-sm text-muted-foreground">پزیشک: {presc.doctorName}</p>
                 </div>
-                <Button variant="ghost" size="icon" title="Print">
-                  <Printer className="w-4 h-4 text-muted-foreground" />
-                </Button>
+                <PrescriptionPrint prescription={{
+                  id: presc.id,
+                  patientName: presc.patientName,
+                  doctorName: presc.doctorName,
+                  medicationName: presc.medicationName,
+                  dosage: presc.dosage,
+                  duration: presc.duration,
+                  notes: presc.notes ?? undefined,
+                  createdAt: presc.prescribedAt,
+                }} />
               </div>
               <div>
+                {/* ناوی دەرمانی بە ئینگلیزی/لاتینی لە لای ڕاست پیشان دەدرێت */}
                 <p className="font-mono text-lg font-semibold dir-ltr text-right text-primary">{presc.medicationName}</p>
                 <div className="flex gap-4 mt-2 text-sm">
                   <div><span className="text-muted-foreground">بەکارهێنان:</span> {presc.dosage}</div>

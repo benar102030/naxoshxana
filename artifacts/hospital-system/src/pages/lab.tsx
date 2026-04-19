@@ -9,16 +9,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
+/**
+ * لاپەڕەی تاقیگەی نەخۆشخانە
+ * ئەم بەشە بەرپرسە لە بەڕێوەبردنی پشکنینەکان: لە داواکردنەوە تا دەرچوونی ئەنجام
+ */
 export default function Lab() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [resultOpen, setResultOpen] = useState<number | null>(null);
+  const [search, setSearch] = useState(""); // گەڕان بەدوای ناو
+  const [categoryFilter, setCategoryFilter] = useState("all"); // فلتەری جۆری پشکنین
+  const [isOpen, setIsOpen] = useState(false); // پەنجەرەی داواکردن
+  const [resultOpen, setResultOpen] = useState<number | null>(null); // پەنجەرەی تۆمارکردنی ئەنجام
   
+  // بارکردنی دراوە پێویستەکان
   const { data: tests, isLoading } = useListLabTests();
   const { data: patients } = useListPatients();
   const { data: staff } = useListStaff();
@@ -28,8 +35,18 @@ export default function Lab() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // فلتەرکردنی لیستی پشکنینەکان بەپێی گەڕان و بەشەکانی تاقیگە
+  const filteredTests = tests?.filter(test => {
+    const matchesSearch = test.patientName.toLowerCase().includes(search.toLowerCase()) || 
+                         test.testName.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || test.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  // تەنها ئەو کارمەندانەی کە پزیشکن بتوانن داوای پشکنین بکەن
   const doctors = staff?.filter(s => s.role === 'doctor') || [];
 
+  // ناردنی داواکارییەکی نوێی پشکنین
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -52,6 +69,10 @@ export default function Lab() {
     }
   };
 
+  /**
+   * تۆمارکردنی ئەنجامی کۆتایی پشکنینەکە
+   * دۆخی پشکنینەکە دەگۆڕێت بۆ 'تەواوبوو' (Completed)
+   */
   const handleResultSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!resultOpen) return;
@@ -73,6 +94,7 @@ export default function Lab() {
     }
   };
 
+  // گۆڕینی دۆخی پشکنین (وەک: وەرگرتنی نمونە)
   const handleStatusChange = async (id: number, status: string) => {
     try {
       await updateTest.mutateAsync({ id, data: { status } });
@@ -148,6 +170,32 @@ export default function Lab() {
         }
       />
 
+      {/* بەشی فلتەرکردنی خێرا */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            placeholder="گەڕان بەدوای نەخۆش یان پشکنین..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-9"
+          />
+        </div>
+        <select 
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="flex h-9 w-full md:w-[150px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <option value="all">هەموو بەشەکان</option>
+          <option value="blood">خوێن (Blood)</option>
+          <option value="urine">میز (Urine)</option>
+          <option value="biochemistry">کیمیا (Biochem)</option>
+          <option value="microbiology">مایکرۆ (Micro)</option>
+          <option value="other">تر (Other)</option>
+        </select>
+      </div>
+
+      {/* خشتەی پشکنینەکان */}
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
@@ -164,10 +212,10 @@ export default function Lab() {
           <TableBody>
             {isLoading ? (
               <TableRow><TableCell colSpan={7} className="text-center py-8">چاوەڕێ بکە...</TableCell></TableRow>
-            ) : tests?.length === 0 ? (
-              <TableRow><TableCell colSpan={7}><EmptyState title="هیچ پشکنینێک نییە" description="لیستی پشکنینەکان لێرە دەردەکەوێت" /></TableCell></TableRow>
+            ) : filteredTests?.length === 0 ? (
+              <TableRow><TableCell colSpan={7}><EmptyState title="هیچ پشکنینێک نەدۆزرایەوە" description="لیستی پشکنینەکان لێرە دەردەکەوێت" /></TableCell></TableRow>
             ) : (
-              tests?.map((test) => (
+              filteredTests?.map((test) => (
                 <TableRow key={test.id}>
                   <TableCell className="font-medium">{test.patientName}</TableCell>
                   <TableCell>
@@ -185,6 +233,7 @@ export default function Lab() {
                   <TableCell><StatusBadge status={test.status} /></TableCell>
                   <TableCell className="text-left">
                     <div className="flex justify-end gap-2">
+                      {/* گۆڕینی قۆناغەکانی پشکنین */}
                       <Select value={test.status} onValueChange={(val) => handleStatusChange(test.id, val)}>
                         <SelectTrigger className="w-[130px] h-8">
                           <SelectValue placeholder="گۆڕینی دۆخ" />
@@ -196,6 +245,7 @@ export default function Lab() {
                         </SelectContent>
                       </Select>
                       
+                      {/* پەنجەرەی تۆمارکردنی ئەنجامی پشکنین */}
                       <Dialog open={resultOpen === test.id} onOpenChange={(open) => setResultOpen(open ? test.id : null)}>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm">ئەنجام</Button>

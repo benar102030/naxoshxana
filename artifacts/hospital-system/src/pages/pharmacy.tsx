@@ -13,15 +13,21 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
+/**
+ * لاپەڕەی بەڕێوەبردنی دەرمانخانە (Pharmacy Management)
+ * کۆنترۆڵکردنی کۆگای دەرمان و تۆمارکردنی کڕین و فرۆشتنەکان
+ */
 export default function Pharmacy() {
-  const [medOpen, setMedOpen] = useState(false);
-  const [saleOpen, setSaleOpen] = useState(false);
+  const [search, setSearch] = useState(""); // باری گەڕان
+  const [medOpen, setMedOpen] = useState(false); // کردنەوەی فۆرمی دەرمانی نوێ
+  const [saleOpen, setSaleOpen] = useState(false); // کردنەوەی فۆرمی فرۆشتن
   
+  // بارکردنی داتاکان لە سێرڤەرەوە
   const { data: medications, isLoading: loadingMeds } = useListMedications();
   const { data: sales, isLoading: loadingSales } = useListPharmacySales();
   const { data: patients } = useListPatients();
@@ -32,6 +38,20 @@ export default function Pharmacy() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // فلتەرکردنی دەرمانەکان بەپێی گەڕان
+  const filteredMeds = medications?.filter(m => 
+    m.name.toLowerCase().includes(search.toLowerCase()) || 
+    (m.category && m.category.toLowerCase().includes(search.toLowerCase())) ||
+    (m.manufacturer && m.manufacturer.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  // فلتەرکردنی فرۆشتنەکان بەپێی گەڕان
+  const filteredSales = sales?.filter(s => 
+    s.patientName.toLowerCase().includes(search.toLowerCase()) || 
+    s.medicationName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // تۆمارکردنی دەرمانی نوێ بۆ کۆگا
   const handleMedSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -56,6 +76,7 @@ export default function Pharmacy() {
     }
   };
 
+  // تۆمارکردنی فرۆشتن و دەرکردنی دەرمان لە کۆگا
   const handleSaleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -68,8 +89,10 @@ export default function Pharmacy() {
           quantity: Number(formData.get("quantity")),
         }
       });
+      // نوێکردنەوەی لیستی فرۆشتنەکان
       queryClient.invalidateQueries({ queryKey: getListPharmacySalesQueryKey() });
-      queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey() }); // Update stock
+      // گرنگ: نوێکردنەوەی بڕی دەرمان لە کۆگا پاش ئەوەی بەشێکی فرۆشرا
+      queryClient.invalidateQueries({ queryKey: getListMedicationsQueryKey() });
       setSaleOpen(false);
       toast({ title: "سەرکەوتوو بوو", description: "فرۆشتنی دەرمان تۆمارکرا" });
     } catch (error) {
@@ -84,12 +107,26 @@ export default function Pharmacy() {
         description="بەڕێوەبردنی کۆگای دەرمان و فرۆشتنەکان"
       />
 
+      {/* مەکینەی گەڕان */}
+      <div className="flex items-center mb-6">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            placeholder="گەڕان بەدوای دەرمان، پۆلێن، یان ناوی نەخۆش..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-9"
+          />
+        </div>
+      </div>
+
       <Tabs defaultValue="inventory" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="inventory">کۆگای دەرمان</TabsTrigger>
           <TabsTrigger value="sales">فرۆشتنەکان</TabsTrigger>
         </TabsList>
 
+        {/* تابی کۆگای دەرمانەکان */}
         <TabsContent value="inventory">
           <div className="flex justify-end mb-4">
             <Dialog open={medOpen} onOpenChange={setMedOpen}>
@@ -161,10 +198,10 @@ export default function Pharmacy() {
               <TableBody>
                 {loadingMeds ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8">چاوەڕێ بکە...</TableCell></TableRow>
-                ) : medications?.length === 0 ? (
-                  <TableRow><TableCell colSpan={6}><EmptyState title="هیچ دەرمانێک نییە" description="تۆماری کۆگا بەتاڵە" /></TableCell></TableRow>
+                ) : filteredMeds?.length === 0 ? (
+                  <TableRow><TableCell colSpan={6}><EmptyState title="هیچ دەرمانێک نەدۆزرایەوە" description="تۆماری کۆگا بەتاڵە یان گەڕانەکەت ئەنجامی نییە" /></TableCell></TableRow>
                 ) : (
-                  medications?.map((med) => {
+                  filteredMeds?.map((med) => {
                     const isLow = med.stock <= med.reorderLevel;
                     return (
                       <TableRow key={med.id}>
@@ -192,6 +229,7 @@ export default function Pharmacy() {
           </div>
         </TabsContent>
 
+        {/* تابی تۆماری فرۆشتنەکان */}
         <TabsContent value="sales">
           <div className="flex justify-end mb-4">
             <Dialog open={saleOpen} onOpenChange={setSaleOpen}>
@@ -251,10 +289,10 @@ export default function Pharmacy() {
               <TableBody>
                 {loadingSales ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8">چاوەڕێ بکە...</TableCell></TableRow>
-                ) : sales?.length === 0 ? (
-                  <TableRow><TableCell colSpan={6}><EmptyState title="هیچ فرۆشتنێک نییە" description="لیستی فرۆشتنەکان بەتاڵە" /></TableCell></TableRow>
+                ) : filteredSales?.length === 0 ? (
+                  <TableRow><TableCell colSpan={6}><EmptyState title="هیچ فرۆشتنێک نەدۆزرایەوە" description="لیستی فرۆشتنەکان بەتاڵە یان گەڕانەکەت ئەنجامی نییە" /></TableCell></TableRow>
                 ) : (
-                  sales?.map((sale) => (
+                  filteredSales?.map((sale) => (
                     <TableRow key={sale.id}>
                       <TableCell dir="ltr" className="text-right text-sm text-muted-foreground">{formatDateTime(sale.soldAt)}</TableCell>
                       <TableCell className="font-medium">{sale.patientName}</TableCell>

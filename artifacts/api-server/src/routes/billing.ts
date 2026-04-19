@@ -6,6 +6,10 @@ import { getPatientNameMap } from "../lib/lookups";
 
 const router: IRouter = Router();
 
+/**
+ * زیادکردنی ناوی نەخۆش بۆ لیستی پسوولەکان
+ * چونکە لە داتابەیس تەنها ناسنامەی نەخۆش (Patient ID) هەڵگیراوە
+ */
 async function expand(rows: (typeof invoicesTable.$inferSelect)[]) {
   const patientMap = await getPatientNameMap(rows.map((r) => r.patientId));
   return rows.map((r) => ({
@@ -21,6 +25,7 @@ async function expand(rows: (typeof invoicesTable.$inferSelect)[]) {
   }));
 }
 
+// وەرگرتنی لیستی هەموو پسوولەکان بەپێی کات
 router.get("/invoices", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
@@ -29,6 +34,7 @@ router.get("/invoices", async (_req, res): Promise<void> => {
   res.json(await expand(rows));
 });
 
+// تۆمارکردنی پسوولەیەکی نوێ
 router.post("/invoices", async (req, res): Promise<void> => {
   const parsed = CreateInvoiceBody.safeParse(req.body);
   if (!parsed.success) {
@@ -42,6 +48,10 @@ router.post("/invoices", async (req, res): Promise<void> => {
   res.status(201).json((await expand([row]))[0]);
 });
 
+/**
+ * تۆمارکردنی پارەدان بۆ پسوولە
+ * لێرەدا بڕی پارەی دراو لەگەڵ بڕی گشتی پسوولەکە بەراورد دەکرێت بۆ دیاریکردنی دۆخی پسوولە
+ */
 router.post("/invoices/:id/payments", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const parsed = PayInvoiceBody.safeParse(req.body);
@@ -49,6 +59,8 @@ router.post("/invoices/:id/payments", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  
+  // دۆزینەوەی پسوولە کۆنەکە
   const [inv] = await db
     .select()
     .from(invoicesTable)
@@ -57,9 +69,14 @@ router.post("/invoices/:id/payments", async (req, res): Promise<void> => {
     res.status(404).json({ error: "پسوولە نەدۆزرایەوە" });
     return;
   }
+  
+  // ئەپدێتکردنی بڕی پارەی دراو
   const newPaid = inv.paidAmount + parsed.data.amount;
+  
+  // دیاریکردنی خۆکارانەی دۆخی پسوولە (بەتەواوی دراوە، بەشێکی دراوە، یان نەدراوە)
   const status =
     newPaid >= inv.amount ? "paid" : newPaid > 0 ? "partial" : "unpaid";
+    
   const [row] = await db
     .update(invoicesTable)
     .set({
@@ -69,6 +86,7 @@ router.post("/invoices/:id/payments", async (req, res): Promise<void> => {
     })
     .where(eq(invoicesTable.id, id))
     .returning();
+    
   res.json((await expand([row]))[0]);
 });
 

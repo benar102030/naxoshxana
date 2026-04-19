@@ -9,6 +9,9 @@ import { getPatientNameMap, getStaffNameMap } from "../lib/lookups";
 
 const router: IRouter = Router();
 
+/**
+ * زیادکردنی زانیاری نەخۆش و پزیشک بۆ لیستی داواکارییەکانی تیشک و سۆنار
+ */
 async function expand(rows: (typeof radiologyOrdersTable.$inferSelect)[]) {
   const patientMap = await getPatientNameMap(rows.map((r) => r.patientId));
   const staffMap = await getStaffNameMap(rows.map((r) => r.doctorId));
@@ -18,8 +21,8 @@ async function expand(rows: (typeof radiologyOrdersTable.$inferSelect)[]) {
     patientName: patientMap.get(r.patientId) ?? "—",
     doctorId: r.doctorId,
     doctorName: staffMap.get(r.doctorId) ?? "—",
-    modality: r.modality,
-    bodyPart: r.bodyPart,
+    modality: r.modality, // جۆری پشکنین وەک (X-Ray, MRI, Ultrasound)
+    bodyPart: r.bodyPart, // بەشی جەستە
     requestedAt: r.requestedAt.toISOString(),
     status: r.status,
     report: r.report,
@@ -28,6 +31,7 @@ async function expand(rows: (typeof radiologyOrdersTable.$inferSelect)[]) {
   }));
 }
 
+// وەرگرتنی لیستی هەموو داواکارییەکانی تیشک و سۆنار
 router.get("/radiology-orders", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
@@ -36,6 +40,7 @@ router.get("/radiology-orders", async (_req, res): Promise<void> => {
   res.json(await expand(rows));
 });
 
+// داواکردنی پشکنینی پزیشکی نوێ (تیشک یان سۆنار)
 router.post("/radiology-orders", async (req, res): Promise<void> => {
   const parsed = CreateRadiologyOrderBody.safeParse(req.body);
   if (!parsed.success) {
@@ -49,6 +54,7 @@ router.post("/radiology-orders", async (req, res): Promise<void> => {
   res.status(201).json((await expand([row]))[0]);
 });
 
+// نوێکردنەوەی دۆخی پشکنین یان نوسینی ڕاپۆرتی پزیشکی بۆ تیشکەکە
 router.patch("/radiology-orders/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const parsed = UpdateRadiologyOrderBody.safeParse(req.body);
@@ -61,6 +67,7 @@ router.patch("/radiology-orders/:id", async (req, res): Promise<void> => {
     .set(parsed.data)
     .where(eq(radiologyOrdersTable.id, id))
     .returning();
+    
   if (!row) {
     res.status(404).json({ error: "داواکاری نەدۆزرایەوە" });
     return;

@@ -16,6 +16,10 @@ import {
   Package,
   Settings,
   LogOut,
+  BedDouble,
+  LayoutGrid,
+  Droplets,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -29,15 +33,23 @@ type Role =
   | "labtech"
   | "radtech";
 
+// هەموو جۆرەکانی بەکارهێنەر
 const ALL: Role[] = ["admin", "manager", "doctor", "nurse", "pharmacist", "cashier", "labtech", "radtech"];
 
-const navItems: { href: string; label: string; icon: typeof LayoutDashboard; roles: Role[] }[] = [
+/**
+ * لیستی پێڕستەکانی لای لایە (Sidebar Items)
+ * هەر پێڕستێک دیاریکراوە کە چ جۆرە ڕۆڵێکی بەکارهێنەر دەتوانێت بیبینێت
+ */
+const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: "/", label: "داشبۆرد / سەرەکی", icon: LayoutDashboard, roles: ALL },
+  { href: "/duty-roster", label: "ڕۆژمێری دەوام", icon: CalendarDays, roles: ALL },
   { href: "/patients", label: "نەخۆشەکان", icon: Users, roles: ALL },
   { href: "/opd", label: "کلینیکی دەرەکی", icon: Stethoscope, roles: ["admin", "manager", "doctor", "nurse"] },
-  { href: "/ipd", label: "نوستن لە نەخۆشخانە", icon: Bed, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/ipd", label: "بەشی ناوخۆیی (IPD)", icon: BedDouble, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/bed-map", label: "نەخشەی جێگاکان", icon: LayoutGrid, roles: ["admin", "manager", "doctor", "nurse"] },
   { href: "/emergency", label: "فریاگوزاری", icon: Ambulance, roles: ["admin", "manager", "doctor", "nurse"] },
   { href: "/surgery", label: "نەشتەرگەری", icon: Activity, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/blood-bank", label: "بانکی خوێن", icon: Droplets, roles: ["admin", "manager", "doctor", "nurse", "labtech", "radtech"] },
   { href: "/lab", label: "تاقیگە", icon: Microscope, roles: ["admin", "manager", "doctor", "nurse", "labtech"] },
   { href: "/radiology", label: "تیشک", icon: FileText, roles: ["admin", "manager", "doctor", "nurse", "radtech"] },
   { href: "/pharmacy", label: "دەرمانخانە", icon: Pill, roles: ["admin", "manager", "doctor", "pharmacist"] },
@@ -45,6 +57,7 @@ const navItems: { href: string; label: string; icon: typeof LayoutDashboard; rol
   { href: "/staff", label: "سەرچاوە مرۆییەکان", icon: UserCog, roles: ["admin", "manager"] },
   { href: "/billing", label: "پسوولەکان", icon: Receipt, roles: ["admin", "manager", "cashier"] },
   { href: "/inventory", label: "کۆگا", icon: Package, roles: ["admin", "manager", "pharmacist"] },
+  { href: "/profile", label: "پڕۆفایل / ڕێکخستن", icon: Settings, roles: ALL },
 ];
 
 export function Sidebar() {
@@ -54,7 +67,13 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground h-screen flex flex-col border-l border-sidebar-border sticky top-0">
       <div className="p-6 pb-2">
-        <h1 className="text-xl font-bold mb-6 text-sidebar-primary-foreground">نەخۆشخانە</h1>
+        <div className="mb-6 flex justify-center items-center">
+          <div className="relative group cursor-pointer">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-500 rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-500"></div>
+            <img src="/logo1.jpg" alt="بەڕێوەبردنی نەخۆشخانە" className="relative max-w-[180px] w-full h-auto object-contain rounded-xl bg-white p-2.5 shadow-md ring-1 ring-border transition-transform duration-300 group-hover:scale-[1.02]" />
+          </div>
+        </div>
+        {/* نیشاندانی ناوی بەکارهێنەری ئێستا و ڕۆڵەکەی */}
         {user && (
           <div className="bg-sidebar-accent/50 p-4 rounded-xl mb-6">
             <div className="font-semibold">{user.fullName}</div>
@@ -63,6 +82,7 @@ export function Sidebar() {
         )}
       </div>
       <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
+        {/* فلتەرکردنی پێڕستەکان تەنها بۆ ئەوانەی کە مۆڵەتیان هەیە */}
         {navItems.filter((it) => !user || it.roles.includes(user.role as Role)).map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
@@ -81,6 +101,7 @@ export function Sidebar() {
           );
         })}
       </nav>
+      {/* دوگمەی چوونەدەرەوە */}
       <div className="p-4 border-t border-sidebar-border">
         <Button
           variant="ghost"

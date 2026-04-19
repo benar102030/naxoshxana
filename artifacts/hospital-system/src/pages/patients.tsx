@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useListPatients, useCreatePatient, getListPatientsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
@@ -11,19 +12,28 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search } from "lucide-react";
 import { formatDate } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
+import { AdminDeleteButton } from "@/components/AdminActions";
 
+/**
+ * لاپەڕەی لیستی نەخۆشەکان
+ * لێرەدا دەتوانرێت نەخۆشی نوێ تۆمار بکرێت و گەڕان بۆ نەخۆشە کۆنەکان بکرێت
+ */
 export default function Patients() {
-  const [search, setSearch] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState(""); // باری گەڕان
+  const [isOpen, setIsOpen] = useState(false); // کردنەوە و داخستنی پەنجەرەی زیادکردن
+  
+  // بارکردنی لیستی نەخۆشەکان لە سێرڤەرەوە
   const { data: patients, isLoading } = useListPatients();
   const createPatient = useCreatePatient();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // فلتەرکردنی نەخۆشەکان بەپێی دەقی گەڕان (ناو، کۆد، یان تەلەفۆن)
   const filteredPatients = patients?.filter(p => 
     p.fullName.includes(search) || p.mrn.includes(search) || (p.phone && p.phone.includes(search))
   );
 
+  // پرۆسەی تۆمارکردنی نەخۆشێکی نوێ
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -38,6 +48,7 @@ export default function Patients() {
           address: formData.get("address") as string || undefined,
         }
       });
+      // نوێکردنەوەی لیستەکە دوای سەرکەوتنی تۆمارکردن
       queryClient.invalidateQueries({ queryKey: getListPatientsQueryKey() });
       setIsOpen(false);
       toast({ title: "سەرکەوتوو بوو", description: "نەخۆشی نوێ زیادکرا" });
@@ -122,6 +133,7 @@ export default function Patients() {
         </div>
       </div>
 
+      {/* خشتەی نیشاندانی نەخۆشەکان */}
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
@@ -132,6 +144,7 @@ export default function Patients() {
               <TableHead>ژمارەی تەلەفۆن</TableHead>
               <TableHead>جۆری خوێن</TableHead>
               <TableHead>بەرواری تۆمارکردن</TableHead>
+              <TableHead className="text-left">کردارەکان</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -148,6 +161,21 @@ export default function Patients() {
                   <TableCell dir="ltr" className="text-right">{patient.phone || '-'}</TableCell>
                   <TableCell dir="ltr" className="text-right">{patient.bloodType || '-'}</TableCell>
                   <TableCell>{formatDate(patient.createdAt)}</TableCell>
+                  <TableCell className="text-left">
+                    <div className="flex items-center gap-1">
+                      <Link href={`/patients/${patient.id}`}>
+                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">بۆ پرۆفایل</Button>
+                      </Link>
+                      <AdminDeleteButton
+                        itemName={patient.fullName}
+                        size="icon"
+                        onDelete={async () => {
+                          await fetch(`/api/patients/${patient.id}`, { method: "DELETE" });
+                          queryClient.invalidateQueries({ queryKey: getListPatientsQueryKey() });
+                        }}
+                      />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}

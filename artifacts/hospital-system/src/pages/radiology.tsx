@@ -9,16 +9,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
+/**
+ * لاپەڕەی تیشک و وێنەگری پزیشکی (Radiology)
+ * ئەم بەشە ڕێگە دەدات بە داواکردنی تیشک و وێنەگرتنی جۆراوجۆر و تۆمارکردنی ڕاپۆرتەکان
+ */
 export default function Radiology() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState<number | null>(null);
+  const [search, setSearch] = useState(""); // گەڕان بەدوای ناو یان ئەندامی جەستە
+  const [modalityFilter, setModalityFilter] = useState("all"); // فلتەری جۆری تیشک (مفراس، ڕەنین، هتد)
+  const [isOpen, setIsOpen] = useState(false); // پەنجەرەی داواکاری نوێ
+  const [reportOpen, setReportOpen] = useState<number | null>(null); // پەنجەرەی ڕاپۆرت
   
+  // بارکردنی زانیارییەکان لە سێرڤەرەوە
   const { data: orders, isLoading } = useListRadiologyOrders();
   const { data: patients } = useListPatients();
   const { data: staff } = useListStaff();
@@ -28,8 +35,17 @@ export default function Radiology() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // فلتەرکردنی لیستی تیشکەکان بەپێی گەڕان و جۆری ئامێری وێنەگرتن
+  const filteredOrders = orders?.filter(order => {
+    const matchesSearch = order.patientName.toLowerCase().includes(search.toLowerCase()) || 
+                         order.bodyPart.toLowerCase().includes(search.toLowerCase());
+    const matchesModality = modalityFilter === 'all' || order.modality === modalityFilter;
+    return matchesSearch && matchesModality;
+  });
+
   const doctors = staff?.filter(s => s.role === 'doctor') || [];
 
+  // ناردنی داواکارییەکی نوێی تیشک بۆ نەخۆش
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -51,6 +67,10 @@ export default function Radiology() {
     }
   };
 
+  /**
+   * تۆمارکردنی ڕاپۆرتی کۆتایی تیشکەکە
+   * دەکرێت بەستەری وێنەی ئەشیعەکەش هاوپێچ بکرێت
+   */
   const handleReportSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!reportOpen) return;
@@ -73,6 +93,7 @@ export default function Radiology() {
     }
   };
 
+  // گۆڕینی دۆخی پشکنین (بۆ نموونە کاتێک ئەنجام درا)
   const handleStatusChange = async (id: number, status: string) => {
     try {
       await updateOrder.mutateAsync({ id, data: { status } });
@@ -141,6 +162,31 @@ export default function Radiology() {
         }
       />
 
+      {/* بەشی فلتەرکردنی خێرا */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            placeholder="گەڕان بەدوای نەخۆش یان ئەندامی جەستە..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-9"
+          />
+        </div>
+        <select 
+          value={modalityFilter}
+          onChange={(e) => setModalityFilter(e.target.value)}
+          className="flex h-9 w-full md:w-[150px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <option value="all">هەموو جۆرەکان</option>
+          <option value="xray">X-Ray</option>
+          <option value="ct">CT Scan</option>
+          <option value="mri">MRI</option>
+          <option value="ultrasound">Ultrasound</option>
+        </select>
+      </div>
+
+      {/* خشتەی داواکارییەکانی تیشک */}
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
@@ -157,10 +203,10 @@ export default function Radiology() {
           <TableBody>
             {isLoading ? (
               <TableRow><TableCell colSpan={7} className="text-center py-8">چاوەڕێ بکە...</TableCell></TableRow>
-            ) : orders?.length === 0 ? (
-              <TableRow><TableCell colSpan={7}><EmptyState title="هیچ داواکارییەک نییە" description="لیستی تیشکەکان لێرە دەردەکەوێت" /></TableCell></TableRow>
+            ) : filteredOrders?.length === 0 ? (
+              <TableRow><TableCell colSpan={7}><EmptyState title="هیچ داواکارییەک نەدۆزرایەوە" description="لیستی تیشکەکان لێرە دەردەکەوێت" /></TableCell></TableRow>
             ) : (
-              orders?.map((order) => (
+              filteredOrders?.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.patientName}</TableCell>
                   <TableCell className="uppercase">{order.modality}</TableCell>
@@ -180,6 +226,7 @@ export default function Radiology() {
                         </SelectContent>
                       </Select>
                       
+                      {/* پەنجەرەی تۆمارکردنی ڕاپۆرتی تیشک */}
                       <Dialog open={reportOpen === order.id} onOpenChange={(open) => setReportOpen(open ? order.id : null)}>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm">ڕاپۆرت</Button>

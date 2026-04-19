@@ -18,23 +18,31 @@ import {
 
 const router: IRouter = Router();
 
+// یارمەتیدەر: دیاریکردنی دەستپێکی ڕۆژ
 function startOfDay(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
   return x;
 }
+
+// یارمەتیدەر: زیادکردنی ڕۆژ مێژوو
 function addDays(d: Date, n: number): Date {
   const x = new Date(d);
   x.setDate(x.getDate() + n);
   return x;
 }
 
+/**
+ * وەرگرتنی کورتەی ئاماری سەرەکی نەخۆشخانە (KPIs)
+ * ئەم بەشە زۆرترین داتا کۆدەکاتەوە بۆ داشبۆردەکە
+ */
 router.get("/dashboard/summary", async (_req, res): Promise<void> => {
   const today = startOfDay(new Date());
   const tomorrow = addDays(today, 1);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const in30 = addDays(today, 30);
 
+  // ئەنجامدانی هەموو داواکارییەکان بە شێوەی هاوتەریب (Parallel) بۆ خێراکردنی وەڵام
   const [
     [{ totalPatients }],
     [{ todayOpdVisits }],
@@ -151,6 +159,9 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
   });
 });
 
+/**
+ * ژمارەی سەردانەکان بۆ ماوەی ١٤ ڕۆژی ڕابردوو بۆ دروستکردنی چارتی ڕەوت (Trend Chart)
+ */
 router.get("/dashboard/visits-trend", async (_req, res): Promise<void> => {
   const today = startOfDay(new Date());
   const start = addDays(today, -13);
@@ -163,6 +174,8 @@ router.get("/dashboard/visits-trend", async (_req, res): Promise<void> => {
     .where(gte(opdVisitsTable.appointmentAt, start))
     .groupBy(sql`date_trunc('day', ${opdVisitsTable.appointmentAt})`)
     .orderBy(sql`date_trunc('day', ${opdVisitsTable.appointmentAt})`);
+    
+  // پڕکردنەوەی ئەو ڕۆژانەی سەردانیان تێدا نییە بە ژمارەی سفڕ
   const map = new Map(rows.map((r) => [r.date, Number(r.value)]));
   const out: { date: string; value: number; label: string | null }[] = [];
   for (let i = 0; i < 14; i++) {
@@ -172,6 +185,9 @@ router.get("/dashboard/visits-trend", async (_req, res): Promise<void> => {
   res.json(out);
 });
 
+/**
+ * ڕەوتی داهات بۆ ماوەی ١٤ ڕۆژی ڕابردوو
+ */
 router.get("/dashboard/revenue-trend", async (_req, res): Promise<void> => {
   const today = startOfDay(new Date());
   const start = addDays(today, -13);
@@ -184,6 +200,7 @@ router.get("/dashboard/revenue-trend", async (_req, res): Promise<void> => {
     .where(gte(invoicesTable.createdAt, start))
     .groupBy(sql`date_trunc('day', ${invoicesTable.createdAt})`)
     .orderBy(sql`date_trunc('day', ${invoicesTable.createdAt})`);
+    
   const map = new Map(rows.map((r) => [r.date, Number(r.value)]));
   const out: { date: string; value: number; label: string | null }[] = [];
   for (let i = 0; i < 14; i++) {
@@ -193,6 +210,7 @@ router.get("/dashboard/revenue-trend", async (_req, res): Promise<void> => {
   res.json(out);
 });
 
+// وەرگرتنی قورسایی کار لەسەر هەر بەشێکی نەخۆشخانە
 router.get("/dashboard/department-load", async (_req, res): Promise<void> => {
   const rows = await db
     .select({
@@ -206,6 +224,9 @@ router.get("/dashboard/department-load", async (_req, res): Promise<void> => {
   res.json(rows);
 });
 
+/**
+ * کۆکردنەوەی دوایین چالاکییەکان لە هەموو بەشە جیاوازەکان (Feed)
+ */
 router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
   const items: {
     id: string;
@@ -215,6 +236,7 @@ router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
     at: string;
   }[] = [];
 
+  // ١. سەردانی کلینیکە دەرەکییەکان
   const opd = await db
     .select()
     .from(opdVisitsTable)
@@ -230,6 +252,7 @@ router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
     });
   }
 
+  // ٢. تۆمارەکانی فریاگوزاری
   const er = await db
     .select()
     .from(emergencyVisitsTable)
@@ -245,6 +268,7 @@ router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
     });
   }
 
+  // ٣. خشتەی نەشتەرگەرییەکان
   const surg = await db
     .select()
     .from(surgeriesTable)
@@ -260,6 +284,7 @@ router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
     });
   }
 
+  // ٤. فرۆشتنی دەرمان لە دەرمانخانە
   const sales = await db
     .select()
     .from(pharmacySalesTable)
@@ -275,6 +300,7 @@ router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
     });
   }
 
+  // ٥. دروستکردنی پسوولەی پارە
   const inv = await db
     .select()
     .from(invoicesTable)
@@ -290,6 +316,7 @@ router.get("/dashboard/recent-activity", async (_req, res): Promise<void> => {
     });
   }
 
+  // ڕیزکردنی هەموو چالاکییەکان بەپێی کات
   items.sort((a, b) => (a.at > b.at ? -1 : 1));
   res.json(items.slice(0, 15));
 });

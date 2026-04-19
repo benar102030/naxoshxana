@@ -192,6 +192,166 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Patient" }
+  /patients/{id}/timeline:
+    get:
+      operationId: getPatientTimeline
+      summary: Get patient medical timeline
+      tags: [patients]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A chronological list of patient events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineEvent'
+
+  /inventory-items:
+    get:
+      operationId: listInventoryItems
+      tags: [inventory]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/InventoryItem" }
+    post:
+      operationId: createInventoryItem
+      tags: [inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateInventoryItemBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InventoryItem" }
+  /inventory-items/{id}:
+    patch:
+      operationId: updateInventoryItem
+      tags: [inventory]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateInventoryItemBody" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InventoryItem" }
+  /inventory-transactions:
+    get:
+      operationId: listInventoryTransactions
+      summary: Get inventory transactions
+      tags: [inventory]
+      parameters:
+        - name: itemId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of inventory transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryTransaction'
+
+  /medications:
+    get:
+      operationId: listMedications
+      tags: [pharmacy]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Medication" }
+    post:
+      operationId: createMedication
+      tags: [pharmacy]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateMedicationBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Medication" }
+  /medications/{id}:
+    patch:
+      operationId: updateMedication
+      tags: [pharmacy]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateMedicationBody" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Medication" }
+  /pharmacy-sales:
+    get:
+      operationId: listPharmacySales
+      tags: [pharmacy]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PharmacySale" }
+    post:
+      operationId: createPharmacySale
+      tags: [pharmacy]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePharmacySaleBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PharmacySale" }
 
   /staff:
     get:
@@ -345,6 +505,20 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Bed" }
+    post:
+      operationId: createBed
+      tags: [ipd]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateBedBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Bed" }
 
   /emergency-visits:
     get:
@@ -534,78 +708,6 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/RadiologyOrder" }
 
-  /medications:
-    get:
-      operationId: listMedications
-      tags: [pharmacy]
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: { $ref: "#/components/schemas/Medication" }
-    post:
-      operationId: createMedication
-      tags: [pharmacy]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/CreateMedicationBody" }
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Medication" }
-  /medications/{id}:
-    patch:
-      operationId: updateMedication
-      tags: [pharmacy]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: integer }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/UpdateMedicationBody" }
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Medication" }
-  /pharmacy-sales:
-    get:
-      operationId: listPharmacySales
-      tags: [pharmacy]
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: { $ref: "#/components/schemas/PharmacySale" }
-    post:
-      operationId: createPharmacySale
-      tags: [pharmacy]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/CreatePharmacySaleBody" }
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/PharmacySale" }
 
   /prescriptions:
     get:
@@ -760,52 +862,6 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Invoice" }
 
-  /inventory-items:
-    get:
-      operationId: listInventoryItems
-      tags: [inventory]
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: { $ref: "#/components/schemas/InventoryItem" }
-    post:
-      operationId: createInventoryItem
-      tags: [inventory]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/CreateInventoryItemBody" }
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/InventoryItem" }
-  /inventory-items/{id}:
-    patch:
-      operationId: updateInventoryItem
-      tags: [inventory]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: integer }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/UpdateInventoryItemBody" }
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/InventoryItem" }
 
 components:
   schemas:
@@ -936,13 +992,20 @@ components:
 
     Bed:
       type: object
+      required: [id, room, bedNumber, ward, occupied]
       properties:
         id: { type: integer }
         room: { type: string }
         bedNumber: { type: string }
         ward: { type: string }
         occupied: { type: boolean }
-      required: [id, room, bedNumber, ward, occupied]
+    CreateBedBody:
+      type: object
+      required: [room, bedNumber, ward]
+      properties:
+        room: { type: string }
+        bedNumber: { type: string }
+        ward: { type: string }
 
     Admission:
       type: object
@@ -1345,3 +1408,25 @@ components:
         subtitle: { type: ["string", "null"] }
         at: { type: string, format: date-time }
       required: [id, kind, title, at]
+
+    TimelineEvent:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [opd, ipd, lab, radiology, prescription, billing] }
+        date: { type: string, format: date-time }
+        title: { type: string }
+        detail: { type: string }
+        status: { type: string }
+      required: [id, type, date, title, detail, status]
+
+    InventoryTransaction:
+      type: object
+      properties:
+        id: { type: integer }
+        itemId: { type: integer }
+        change: { type: integer }
+        type: { type: string, enum: [in, out, adjustment] }
+        reason: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, itemId, change, type, createdAt]

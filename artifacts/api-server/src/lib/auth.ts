@@ -50,6 +50,9 @@ declare global {
   }
 }
 
+/**
+ * مێدڵوێر بۆ ناچارکردنی بەکارهێنەر کە چووبێتە ژوورەوە (Authentication)
+ */
 export const requireAuth: RequestHandler = (req, res, next) => {
   const auth = req.header("authorization") ?? "";
   const m = auth.match(/^Bearer\s+(.+)$/);

@@ -7,19 +7,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from "recharts";
 import { StatusBadge } from "@/components/StatusBadge";
 
+/**
+ * لاپەڕەی داشبۆردی سەرەکی (Main Dashboard)
+ * ئەم بەشە کورتی دەخاتە سەر هەموو چالاکییەکانی نەخۆشخانە بە شێوەی گرافیک و ئامار
+ */
 export default function Dashboard() {
-  const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
-  const { data: visitsTrend } = useGetVisitsTrend();
-  const { data: deptLoad } = useGetDepartmentLoad();
-  const { data: revTrend } = useGetRevenueTrend();
-  const { data: recentActivity } = useGetRecentActivity();
+  // وەرگرتنی هەموو ئامارەکان لە ڕێگەی هووکەکانی (Hooks) سێرڤەرەوە
+  const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary(); // کورتەی خێرا (KPIs)
+  const { data: visitsTrend } = useGetVisitsTrend(); // ڕەوتی سەردانەکان
+  const { data: deptLoad } = useGetDepartmentLoad(); // قورسایی کار لەسەر بەشەکان
+  const { data: revTrend } = useGetRevenueTrend(); // ڕەوتی داهات
+  const { data: recentActivity } = useGetRecentActivity(); // دوایین گۆڕانکارییەکان
 
-  if (loadingSummary || !summary) return <div>Loading...</div>;
+  // نیشاندانی تێکستی چاوەڕێبە تاوەکو داتاکان دەگەن
+  if (loadingSummary || !summary) return <div className="p-8 text-center text-muted-foreground">باردەکرێت...</div>;
 
   return (
     <div className="space-y-6">
+      {/* ناونیشانی لاپەڕە */}
       <PageHeader title="داشبۆرد / سەرەکی" description="کورتەی دۆخی ئێستای نەخۆشخانە" />
       
+      {/* سندوقی تێبینییە سەرەکییەکان (KPI Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="کۆی نەخۆشەکان"
@@ -66,6 +74,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* چارتی ڕەوتی سەردانەکان (Area Chart) */}
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>ڕەوتی سەردانەکان (١٤ ڕۆژی ڕابردوو)</CardTitle>
@@ -83,6 +92,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* چارتی داهاتی پسوولەکان (Line Chart) */}
         <Card>
           <CardHeader>
             <CardTitle>داهاتی مانگانە</CardTitle>
@@ -100,6 +110,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* چارتی قورسایی بەشەکان (Bar Chart) */}
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>قورسایی بەشەکان</CardTitle>
@@ -117,6 +128,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* لیستی دوایین چالاکییەکان (Activity Feed) */}
         <Card>
           <CardHeader>
             <CardTitle>دوایین چالاکییەکان</CardTitle>

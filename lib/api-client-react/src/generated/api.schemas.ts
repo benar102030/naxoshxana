@@ -157,6 +157,12 @@ export interface Bed {
   occupied: boolean;
 }
 
+export interface CreateBedBody {
+  room: string;
+  bedNumber: string;
+  ward: string;
+}
+
 export interface Admission {
   id: number;
   patientId: number;
@@ -578,3 +584,47 @@ export interface ActivityItem {
   subtitle?: string | null;
   at: string;
 }
+
+export type TimelineEventType =
+  (typeof TimelineEventType)[keyof typeof TimelineEventType];
+
+export const TimelineEventType = {
+  opd: "opd",
+  ipd: "ipd",
+  lab: "lab",
+  radiology: "radiology",
+  prescription: "prescription",
+  billing: "billing",
+} as const;
+
+export interface TimelineEvent {
+  id: number;
+  type: TimelineEventType;
+  date: string;
+  title: string;
+  detail: string;
+  status: string;
+}
+
+export type InventoryTransactionType =
+  (typeof InventoryTransactionType)[keyof typeof InventoryTransactionType];
+
+export const InventoryTransactionType = {
+  in: "in",
+  out: "out",
+  adjustment: "adjustment",
+} as const;
+
+export interface InventoryTransaction {
+  id: number;
+  itemId: number;
+  change: number;
+  type: InventoryTransactionType;
+  /** @nullable */
+  reason?: string | null;
+  createdAt: string;
+}
+
+export type ListInventoryTransactionsParams = {
+  itemId?: number;
+};

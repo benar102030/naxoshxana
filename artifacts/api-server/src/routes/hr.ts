@@ -15,6 +15,7 @@ import { getStaffNameMap } from "../lib/lookups";
 
 const router: IRouter = Router();
 
+// وەرگرتنی خشتەی دەوامی کارمەندان
 router.get("/shifts", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
@@ -29,6 +30,7 @@ router.get("/shifts", async (_req, res): Promise<void> => {
   );
 });
 
+// دیاریکردنی دەوام (Shift) بۆ کارمەندێک
 router.post("/shifts", async (req, res): Promise<void> => {
   const parsed = CreateShiftBody.safeParse(req.body);
   if (!parsed.success) {
@@ -40,6 +42,7 @@ router.post("/shifts", async (req, res): Promise<void> => {
   res.status(201).json({ ...row, staffName: staffMap.get(row.staffId) ?? "—" });
 });
 
+// وەرگرتنی لیستی مۆڵەتی کارمەندان
 router.get("/leaves", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
@@ -54,6 +57,7 @@ router.get("/leaves", async (_req, res): Promise<void> => {
   );
 });
 
+// داواکردنی مۆڵەت لەلایەن کارمەندەوە
 router.post("/leaves", async (req, res): Promise<void> => {
   const parsed = CreateLeaveBody.safeParse(req.body);
   if (!parsed.success) {
@@ -65,6 +69,7 @@ router.post("/leaves", async (req, res): Promise<void> => {
   res.status(201).json({ ...row, staffName: staffMap.get(row.staffId) ?? "—" });
 });
 
+// وەرگرتنی لیستی مووچەپێدراوەکان (Payroll History)
 router.get("/payroll", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
@@ -80,18 +85,26 @@ router.get("/payroll", async (_req, res): Promise<void> => {
   );
 });
 
+/**
+ * ئەنجامدانی موچەی مانگانە بۆ کارمەند
+ * لەم بەشەدا کۆی گشتی موچە (Net Salary) بە شێوەی خۆکار هەژمار دەکرێت
+ */
 router.post("/payroll", async (req, res): Promise<void> => {
   const parsed = CreatePayrollBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  
+  // لۆژیکی هەژمارکردنی موچە: (موچەی بنەڕەتی + پاداشت) - لێبڕینەکان
   const net =
     parsed.data.baseSalary + parsed.data.bonus - parsed.data.deductions;
+    
   const [row] = await db
     .insert(payrollTable)
     .values({ ...parsed.data, net, paidAt: new Date() })
     .returning();
+    
   const staffMap = await getStaffNameMap([row.staffId]);
   res.status(201).json({
     ...row,

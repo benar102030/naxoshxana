@@ -14,15 +14,26 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * لاپەڕەی بەشی فریاگوزاری (ER)
+ * ئەم بەشە تایبەتە بە تۆمارکردنی خێرای نەخۆشە مەترسیدارەکان و پۆلێنکردنیان (Triage)
+ */
 export default function Emergency() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // پەنجەرەی تۆمارکردنی حاڵەتی نوێ
+  
+  // بارکردنی لیستی سەردانەکان و نەخۆشەکان
   const { data: visits, isLoading } = useListEmergencyVisits();
   const { data: patients } = useListPatients();
+  
   const createVisit = useCreateEmergencyVisit();
   const updateVisit = useUpdateEmergencyVisit();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  /**
+   * تۆمارکردنی حاڵەتێکی نائاسایی
+   * لێرەدا پۆلێنکردنی (Triage) زۆر گرنگە بۆ دیاریکردنی جەختی پزیشکی
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -43,6 +54,7 @@ export default function Emergency() {
     }
   };
 
+  // گۆڕینی دۆخی نەخۆش لە فریاگوزاری (وەک: وەرگرتن بۆ بەشە ناوخۆییەکان)
   const handleStatusChange = async (id: number, status: string) => {
     try {
       await updateVisit.mutateAsync({ id, data: { status } });
@@ -127,6 +139,7 @@ export default function Emergency() {
                   <TableCell><StatusBadge status={visit.triage} /></TableCell>
                   <TableCell><StatusBadge status={visit.status} /></TableCell>
                   <TableCell className="text-left">
+                    {/* گۆڕینی قۆناغی چارەسەر یان دەرچوو */}
                     <Select value={visit.status} onValueChange={(val) => handleStatusChange(visit.id, val)}>
                       <SelectTrigger className="w-[130px] h-8">
                         <SelectValue placeholder="گۆڕینی دۆخ" />

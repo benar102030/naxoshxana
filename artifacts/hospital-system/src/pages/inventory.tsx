@@ -2,21 +2,30 @@ import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/i18n";
-import { useListInventoryItems, useCreateInventoryItem, useUpdateInventoryItem, getListInventoryItemsQueryKey } from "@workspace/api-client-react";
+import { formatCurrency, formatDateTime } from "@/lib/i18n";
+import { 
+  useListInventoryItems, useCreateInventoryItem, useUpdateInventoryItem, 
+  getListInventoryItemsQueryKey, useListInventoryTransactions
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Plus, AlertTriangle, Edit2 } from "lucide-react";
+import { Plus, AlertTriangle, Edit2, History } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
+/**
+ * لاپەڕەی کۆگا (Inventory)
+ * بەڕێوەبردنی کەلوپەلی پزیشکی و ئۆفیس، چاودێریکردنی بڕی بەردەست و مێژووی گۆڕانکارییەکان
+ */
 export default function Inventory() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(false); // بۆ کردنەوەی دیالۆگی زیادکردنی نوێ
+  const [editOpen, setEditOpen] = useState<number | null>(null); // بۆ دەستکاریکردنی کەلوپەلێکی دیاریکراو
+  const [historyOpen, setHistoryOpen] = useState<number | null>(null); // بۆ بینینی مێژووی گۆڕانکارییەکانی کەلوپەلێک
   
+  // بارکردنی داتاکان و ئامادەکردنی کردارەکانی نوێکردنەوە
   const { data: items, isLoading } = useListInventoryItems();
   const createItem = useCreateInventoryItem();
   const updateItem = useUpdateInventoryItem();
@@ -24,6 +33,7 @@ export default function Inventory() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // مامەڵەکردن لەگەڵ فۆرمی زیادکردنی کەلوپەلێکی نوێ
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -39,6 +49,7 @@ export default function Inventory() {
           supplier: formData.get("supplier") as string || undefined,
         }
       });
+      // نوێکردنەوەی لیستەکە پاش پاشەکەوتکردن
       queryClient.invalidateQueries({ queryKey: getListInventoryItemsQueryKey() });
       setIsOpen(false);
       toast({ title: "سەرکەوتوو بوو", description: "کەلوپەلی نوێ بۆ کۆگا زیادکرا" });
@@ -47,6 +58,7 @@ export default function Inventory() {
     }
   };
 
+  // مامەڵەکردن لەگەڵ فۆرمی دەستکاریکردنی بڕی کەلوپەل
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editOpen) return;
@@ -125,6 +137,7 @@ export default function Inventory() {
         }
       />
 
+      {/* خشتەی نیشاندانی کەلوپەلەکان */}
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
@@ -144,11 +157,13 @@ export default function Inventory() {
               <TableRow><TableCell colSpan={6}><EmptyState title="کۆگا بەتاڵە" description="هیچ کەلوپەلێک لە کۆگا تۆمار نەکراوە" /></TableCell></TableRow>
             ) : (
               items?.map((item) => {
+                // لۆژیکی ئاگادارکردنەوەی کەمبوونەوەی بڕ لە کۆگا
                 const isLow = item.quantity <= item.reorderLevel;
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       {item.name}
+                      {/* نیشاندانی نیشانەی هۆشداری ئەگەر بڕەکە کەم بوو */}
                       {isLow && (
                         <Badge variant="destructive" className="mr-2 px-1 py-0 h-5 text-[10px]">
                           <AlertTriangle className="w-3 h-3 ml-1" /> کەمبووەتەوە
@@ -161,7 +176,8 @@ export default function Inventory() {
                     </TableCell>
                     <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
                     <TableCell>{item.supplier || '-'}</TableCell>
-                    <TableCell className="text-left">
+                    <TableCell className="text-left flex gap-1">
+                      {/* دوگمەی دەستکاریکردن */}
                       <Dialog open={editOpen === item.id} onOpenChange={(open) => setEditOpen(open ? item.id : null)}>
                         <DialogTrigger asChild>
                           <Button variant="ghost" size="icon" title="دەستکاری">
@@ -198,6 +214,24 @@ export default function Inventory() {
                           </form>
                         </DialogContent>
                       </Dialog>
+
+                      {/* دوگمەی بینینی مێژووی گۆڕانکارییەکان (Audit History) */}
+                      <Dialog open={historyOpen === item.id} onOpenChange={(open) => setHistoryOpen(open ? item.id : null)}>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon" title="مێژوو">
+                            <History className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>مێژووی گۆڕانکارییەکان: {item.name}</DialogTitle>
+                          </DialogHeader>
+                          <div className="pt-4 max-h-[60vh] overflow-y-auto">
+                            {/* بانگکردنی پێکهاتەی نیشاندانی وردەکاری مێژوو */}
+                            <InventoryTransactions itemId={item.id} />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                   </TableRow>
                 );
@@ -206,6 +240,44 @@ export default function Inventory() {
           </TableBody>
         </Table>
       </div>
+    </div>
+  );
+}
+
+/**
+ * پێکهاتەیەک بۆ نیشاندانی مێژووی گۆڕانکارییەکانی دانە دانەی کەلوپەلەکان
+ * وەک (زیادبوون، کەمبوون، یان ڕێکخستنەوەی کۆگا)
+ */
+function InventoryTransactions({ itemId }: { itemId: number }) {
+  const { data: logs, isLoading } = useListInventoryTransactions({ itemId });
+
+  if (isLoading) return <div className="py-8 text-center text-muted-foreground">چاوەڕێ بکە...</div>;
+  if (!logs || logs.length === 0) return <div className="py-8 text-center text-muted-foreground italic">هیچ تۆمارێک نییە</div>;
+
+  return (
+    <div className="space-y-3">
+      {logs.map((log) => (
+        <div key={log.id} className="flex justify-between items-center p-3 border rounded-lg bg-muted/30">
+          <div>
+            <div className="flex items-center gap-2">
+              {/* دیاریکردنی ڕەنگ بەپێی جۆری کردارەکە */}
+              <span className={`w-2 h-2 rounded-full ${
+                log.type === 'in' ? 'bg-emerald-500' : 
+                log.type === 'out' ? 'bg-rose-500' : 'bg-amber-500'
+              }`} />
+              <span className="font-medium">
+                {log.type === 'in' ? 'زیادکرا' : 
+                 log.type === 'out' ? 'کەمکرا' : 'گۆڕانکاری'}
+              </span>
+              <span className="text-sm font-mono dir-ltr">{log.change > 0 ? `+${log.change}` : log.change}</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">{log.reason || 'بەبێ هۆکار'}</p>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            {formatDateTime(log.createdAt)}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

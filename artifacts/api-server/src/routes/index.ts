@@ -16,6 +16,9 @@ import prescriptionsRouter from "./prescriptions";
 import hrRouter from "./hr";
 import billingRouter from "./billing";
 import inventoryRouter from "./inventory";
+import vitalsRouter from "./vitals";
+import notificationsRouter from "./notifications";
+import bloodBankRouter from "./blood-bank";
 
 const router: IRouter = Router();
 
@@ -48,6 +51,10 @@ const RBAC: Array<{ prefix: RegExp; roles: Role[] }> = [
   { prefix: /^\/invoices(\/|$)/, roles: ["admin", "manager", "cashier"] },
   { prefix: /^\/billing(\/|$)/, roles: ["admin", "manager", "cashier"] },
   { prefix: /^\/inventory(-|\/|$)/, roles: ["admin", "manager", "pharmacist"] },
+  { prefix: /^\/vitals(\/|$)/, roles: ["admin", "manager", "doctor", "nurse"] },
+  { prefix: /^\/notifications(\/|$)/, roles: ALL_ROLES },
+  { prefix: /^\/blood-bank(\/|$)/, roles: ["admin", "manager", "doctor", "nurse", "labtech", "radtech"] },
+  { prefix: /^\/(shifts|leaves|payroll|duty-roster)(\/|$)/, roles: ALL_ROLES },
 ];
 
 const rbac: RequestHandler = (req, res, next) => {
@@ -83,5 +90,8 @@ router.use(prescriptionsRouter);
 router.use(hrRouter);
 router.use(billingRouter);
 router.use(inventoryRouter);
+router.use(vitalsRouter);
+router.use(notificationsRouter);
+router.use(bloodBankRouter);
 
 export default router;
