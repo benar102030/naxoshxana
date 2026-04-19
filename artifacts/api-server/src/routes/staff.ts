@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 import { db, staffTable } from "@workspace/db";
 import { CreateStaffBody, UpdateStaffBody } from "@workspace/api-zod";
 
@@ -34,7 +35,7 @@ router.post("/staff", async (req, res): Promise<void> => {
   }
   const [row] = await db
     .insert(staffTable)
-    .values(parsed.data)
+    .values({ ...parsed.data, password: bcrypt.hashSync(parsed.data.password, 10) })
     .returning();
   res.status(201).json(serialize(row));
 });

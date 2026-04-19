@@ -19,7 +19,6 @@ export function Header() {
   return (
     <header className="h-16 border-b bg-card flex items-center justify-between px-6 sticky top-0 z-10">
       <div className="flex items-center gap-4">
-        {/* We can add a breadcrumb or page title here later if we want */}
       </div>
       <div className="flex items-center gap-4">
         <div className="text-sm font-medium text-muted-foreground hidden sm:block">

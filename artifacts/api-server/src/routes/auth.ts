@@ -21,9 +21,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     res.status(401).json({ error: "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە" });
     return;
   }
-  const ok = user.password.startsWith("$2")
-    ? await bcrypt.compare(parsed.data.password, user.password)
-    : user.password === parsed.data.password;
+  const ok = await bcrypt.compare(parsed.data.password, user.password);
   if (!ok) {
     res.status(401).json({ error: "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە" });
     return;
