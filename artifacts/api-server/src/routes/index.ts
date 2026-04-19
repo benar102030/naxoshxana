@@ -55,7 +55,7 @@ const rbac: RequestHandler = (req, res, next) => {
     res.status(401).json({ error: "نەناسراو" });
     return;
   }
-  const rule = RBAC.find((r) => r.prefix.test(req.path));
+  const rule = RBAC.find((r) => r.prefix.test(req.path.toLowerCase()));
   if (!rule) {
     next();
     return;
