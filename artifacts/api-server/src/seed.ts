@@ -19,6 +19,7 @@ import {
   inventoryItemsTable,
 } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 async function main() {
   // wipe
@@ -49,22 +50,24 @@ async function main() {
   await db.execute(sql`ALTER SEQUENCE beds_id_seq RESTART WITH 1`);
   await db.execute(sql`ALTER SEQUENCE medications_id_seq RESTART WITH 1`);
 
-  // STAFF (one per role)
+  // STAFF (one per role) — every demo password is "demo"
+  const hash = (pw: string) => bcrypt.hashSync(pw, 10);
+  const demoPw = hash("demo");
   const staff = await db
     .insert(staffTable)
     .values([
-      { fullName: "د. ئاراس کەمال", username: "admin", password: "admin123", role: "admin", department: "بەڕێوەبردن", phone: "0750-1000001", salary: 2500 },
-      { fullName: "د. شیلان حەسەن", username: "doctor1", password: "doctor123", role: "doctor", department: "ناوخۆیی", phone: "0750-1000002", salary: 2200 },
-      { fullName: "د. کاوە محەمەد", username: "doctor2", password: "doctor123", role: "doctor", department: "منداڵان", phone: "0750-1000003", salary: 2200 },
-      { fullName: "د. ژیان ئەحمەد", username: "doctor3", password: "doctor123", role: "doctor", department: "نەشتەرگەری", phone: "0750-1000004", salary: 2400 },
-      { fullName: "د. ڕێبین ئیبراهیم", username: "doctor4", password: "doctor123", role: "doctor", department: "فریاگوزاری", phone: "0750-1000005", salary: 2300 },
-      { fullName: "نازەنین ئومێد", username: "nurse1", password: "nurse123", role: "nurse", department: "نوستن", phone: "0750-2000001", salary: 1100 },
-      { fullName: "ھێرۆ ساڵح", username: "nurse2", password: "nurse123", role: "nurse", department: "فریاگوزاری", phone: "0750-2000002", salary: 1100 },
-      { fullName: "زانا یوسف", username: "pharmacist", password: "pharm123", role: "pharmacist", department: "دەرمانخانە", phone: "0750-3000001", salary: 1500 },
-      { fullName: "ئاوات نوری", username: "cashier", password: "cash123", role: "cashier", department: "پسوولەکان", phone: "0750-4000001", salary: 1000 },
-      { fullName: "ھیوا فەرھاد", username: "labtech", password: "lab123", role: "labtech", department: "تاقیگە", phone: "0750-5000001", salary: 1200 },
-      { fullName: "بەرزان عەلی", username: "radtech", password: "rad123", role: "radtech", department: "تیشک", phone: "0750-6000001", salary: 1300 },
-      { fullName: "تارا ڕەسوڵ", username: "manager", password: "mgr123", role: "manager", department: "بەڕێوەبردن", phone: "0750-7000001", salary: 2000 },
+      { fullName: "د. ئاراس کەمال", username: "admin", password: demoPw, role: "admin", department: "بەڕێوەبردن", phone: "0750-1000001", salary: 2500 },
+      { fullName: "د. شیلان حەسەن", username: "doctor1", password: demoPw, role: "doctor", department: "ناوخۆیی", phone: "0750-1000002", salary: 2200 },
+      { fullName: "د. کاوە محەمەد", username: "doctor2", password: demoPw, role: "doctor", department: "منداڵان", phone: "0750-1000003", salary: 2200 },
+      { fullName: "د. ژیان ئەحمەد", username: "doctor3", password: demoPw, role: "doctor", department: "نەشتەرگەری", phone: "0750-1000004", salary: 2400 },
+      { fullName: "د. ڕێبین ئیبراهیم", username: "doctor4", password: demoPw, role: "doctor", department: "فریاگوزاری", phone: "0750-1000005", salary: 2300 },
+      { fullName: "نازەنین ئومێد", username: "nurse1", password: demoPw, role: "nurse", department: "نوستن", phone: "0750-2000001", salary: 1100 },
+      { fullName: "ھێرۆ ساڵح", username: "nurse2", password: demoPw, role: "nurse", department: "فریاگوزاری", phone: "0750-2000002", salary: 1100 },
+      { fullName: "زانا یوسف", username: "pharmacist", password: demoPw, role: "pharmacist", department: "دەرمانخانە", phone: "0750-3000001", salary: 1500 },
+      { fullName: "ئاوات نوری", username: "cashier", password: demoPw, role: "cashier", department: "پسوولەکان", phone: "0750-4000001", salary: 1000 },
+      { fullName: "ھیوا فەرھاد", username: "labtech", password: demoPw, role: "labtech", department: "تاقیگە", phone: "0750-5000001", salary: 1200 },
+      { fullName: "بەرزان عەلی", username: "radtech", password: demoPw, role: "radtech", department: "تیشک", phone: "0750-6000001", salary: 1300 },
+      { fullName: "تارا ڕەسوڵ", username: "manager", password: demoPw, role: "manager", department: "بەڕێوەبردن", phone: "0750-7000001", salary: 2000 },
     ])
     .returning();
 

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ApiError } from "@workspace/api-client-react/src/custom-fetch";
 
 export default function Login() {
   const { data: users, isLoading } = useListAuthUsers();
@@ -12,15 +11,11 @@ export default function Login() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const { toast } = useToast();
 
-  const handleLogin = async (username: string, _password: string) => {
+  const handleLogin = async (username: string) => {
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/auth/demo-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+      const result = await loginMutation.mutateAsync({
+        data: { username, password: "demo" },
       });
-      if (!res.ok) throw new Error("login failed");
-      const result = await res.json();
       setAuth(result.token, result.user);
       toast({
         title: "بەخێربێیت",
@@ -69,7 +64,7 @@ export default function Login() {
                   key={user.username}
                   variant="outline"
                   className="w-full justify-start h-auto py-3 px-4 border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5"
-                  onClick={() => handleLogin(user.username, user.password)}
+                  onClick={() => handleLogin(user.username)}
                   disabled={loginMutation.isPending}
                 >
                   <div className="flex flex-col items-start gap-1">

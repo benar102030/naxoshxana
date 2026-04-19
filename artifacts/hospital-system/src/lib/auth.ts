@@ -1,17 +1,27 @@
 import { create } from "zustand";
+import type { Staff } from "@workspace/api-client-react";
 
 interface AuthState {
   token: string | null;
-  user: any | null;
-  setAuth: (token: string | null, user: any | null) => void;
+  user: Staff | null;
+  setAuth: (token: string | null, user: Staff | null) => void;
   logout: () => void;
+}
+
+function readUser(): Staff | null {
+  try {
+    const raw = localStorage.getItem("auth_user");
+    return raw ? (JSON.parse(raw) as Staff) : null;
+  } catch {
+    return null;
+  }
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("auth_token"),
-  user: JSON.parse(localStorage.getItem("auth_user") || "null"),
+  user: readUser(),
   setAuth: (token, user) => {
-    if (token) {
+    if (token && user) {
       localStorage.setItem("auth_token", token);
       localStorage.setItem("auth_user", JSON.stringify(user));
     } else {

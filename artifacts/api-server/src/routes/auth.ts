@@ -1,7 +1,9 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 import { db, staffTable } from "@workspace/db";
 import { LoginBody } from "@workspace/api-zod";
+import { signToken, requireAuth, type Role } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -15,12 +17,25 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     .select()
     .from(staffTable)
     .where(eq(staffTable.username, parsed.data.username));
-  if (!user || user.password !== parsed.data.password) {
+  if (!user) {
     res.status(401).json({ error: "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە" });
     return;
   }
+  const ok = user.password.startsWith("$2")
+    ? await bcrypt.compare(parsed.data.password, user.password)
+    : user.password === parsed.data.password;
+  if (!ok) {
+    res.status(401).json({ error: "ناوی بەکارهێنەر یان وشەی نهێنی هەڵەیە" });
+    return;
+  }
+  const token = signToken({
+    sub: user.id,
+    username: user.username,
+    role: user.role as Role,
+    fullName: user.fullName,
+  });
   res.json({
-    token: `tok_${user.id}_${Date.now()}`,
+    token,
     user: {
       id: user.id,
       fullName: user.fullName,
@@ -34,15 +49,11 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   });
 });
 
-router.get("/auth/me", async (req, res): Promise<void> => {
-  const auth = req.header("authorization") ?? "";
-  const m = auth.match(/^Bearer tok_(\d+)_/);
-  if (!m) {
-    res.status(401).json({ error: "نەناسراو" });
-    return;
-  }
-  const id = Number(m[1]);
-  const [user] = await db.select().from(staffTable).where(eq(staffTable.id, id));
+router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
+  const [user] = await db
+    .select()
+    .from(staffTable)
+    .where(eq(staffTable.id, req.user!.sub));
   if (!user) {
     res.status(401).json({ error: "نەناسراو" });
     return;
@@ -66,34 +77,8 @@ router.get("/auth/users", async (_req, res): Promise<void> => {
       username: u.username,
       fullName: u.fullName,
       role: u.role,
-      password: "demo",
     })),
   );
-});
-
-router.post("/auth/demo-login", async (req, res): Promise<void> => {
-  const username = String(req.body?.username ?? "");
-  const [user] = await db
-    .select()
-    .from(staffTable)
-    .where(eq(staffTable.username, username));
-  if (!user) {
-    res.status(404).json({ error: "نەناسراو" });
-    return;
-  }
-  res.json({
-    token: `tok_${user.id}_${Date.now()}`,
-    user: {
-      id: user.id,
-      fullName: user.fullName,
-      username: user.username,
-      role: user.role,
-      department: user.department,
-      phone: user.phone,
-      salary: user.salary,
-      joinedAt: user.joinedAt.toISOString(),
-    },
-  });
 });
 
 export default router;

@@ -19,20 +19,32 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 
-const navItems = [
-  { href: "/", label: "داشبۆرد / سەرەکی", icon: LayoutDashboard },
-  { href: "/opd", label: "کلینیکی دەرەکی", icon: Stethoscope },
-  { href: "/ipd", label: "نوستن لە نەخۆشخانە", icon: Bed },
-  { href: "/emergency", label: "فریاگوزاری", icon: Ambulance },
-  { href: "/surgery", label: "نەشتەرگەری", icon: Activity },
-  { href: "/lab", label: "تاقیگە", icon: Microscope },
-  { href: "/radiology", label: "تیشک", icon: FileText },
-  { href: "/pharmacy", label: "دەرمانخانە", icon: Pill },
-  { href: "/prescriptions", label: "نوسخەی پزیشکی", icon: FileText },
-  { href: "/patients", label: "نەخۆشەکان", icon: Users },
-  { href: "/staff", label: "سەرچاوە مرۆییەکان", icon: UserCog },
-  { href: "/billing", label: "پسوولەکان", icon: Receipt },
-  { href: "/inventory", label: "کۆگا", icon: Package },
+type Role =
+  | "admin"
+  | "manager"
+  | "doctor"
+  | "nurse"
+  | "pharmacist"
+  | "cashier"
+  | "labtech"
+  | "radtech";
+
+const ALL: Role[] = ["admin", "manager", "doctor", "nurse", "pharmacist", "cashier", "labtech", "radtech"];
+
+const navItems: { href: string; label: string; icon: typeof LayoutDashboard; roles: Role[] }[] = [
+  { href: "/", label: "داشبۆرد / سەرەکی", icon: LayoutDashboard, roles: ALL },
+  { href: "/patients", label: "نەخۆشەکان", icon: Users, roles: ALL },
+  { href: "/opd", label: "کلینیکی دەرەکی", icon: Stethoscope, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/ipd", label: "نوستن لە نەخۆشخانە", icon: Bed, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/emergency", label: "فریاگوزاری", icon: Ambulance, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/surgery", label: "نەشتەرگەری", icon: Activity, roles: ["admin", "manager", "doctor", "nurse"] },
+  { href: "/lab", label: "تاقیگە", icon: Microscope, roles: ["admin", "manager", "doctor", "nurse", "labtech"] },
+  { href: "/radiology", label: "تیشک", icon: FileText, roles: ["admin", "manager", "doctor", "nurse", "radtech"] },
+  { href: "/pharmacy", label: "دەرمانخانە", icon: Pill, roles: ["admin", "manager", "doctor", "pharmacist"] },
+  { href: "/prescriptions", label: "نوسخەی پزیشکی", icon: FileText, roles: ["admin", "manager", "doctor", "nurse", "pharmacist"] },
+  { href: "/staff", label: "سەرچاوە مرۆییەکان", icon: UserCog, roles: ["admin", "manager"] },
+  { href: "/billing", label: "پسوولەکان", icon: Receipt, roles: ["admin", "manager", "cashier"] },
+  { href: "/inventory", label: "کۆگا", icon: Package, roles: ["admin", "manager", "pharmacist"] },
 ];
 
 export function Sidebar() {
@@ -51,7 +63,7 @@ export function Sidebar() {
         )}
       </div>
       <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
-        {navItems.map((item) => {
+        {navItems.filter((it) => !user || it.roles.includes(user.role as Role)).map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
             <Link key={item.href} href={item.href}>
