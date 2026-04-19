@@ -1,0 +1,31 @@
+kind = "data-app"
+previewPath = "/"
+title = "سیستەمی نەخۆشخانە"
+version = "1.0.0"
+id = "artifacts/hospital-system"
+router = "path"
+
+[[integratedSkills]]
+name = "data-visualization"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19051
+
+[services.development]
+run = "pnpm --filter @workspace/hospital-system run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hospital-system", "run", "build" ]
+publicDir = "artifacts/hospital-system/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19051"
+BASE_PATH = "/"
